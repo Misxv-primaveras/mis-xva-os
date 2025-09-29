@@ -174,7 +174,7 @@
         </label>
         <button class="btn" id="uploadBtn" disabled>Subir recuerdos a la nube</button>
       </div>
-      <input id="fileInput" class="visualmente-hidden visually-hidden" type="file" accept="image/*,video/*" multiple>
+      <input id="fileInput" class="visually-hidden" type="file" accept="image/*,video/*" multiple>
       <div class="previews" id="previews"></div>
       <div class="note" id="statusMsg"></div>
     </section>
@@ -199,7 +199,9 @@
         <div class="dedi-actions">
           <button type="submit" class="btn">Enviar dedicatoria</button>
           <button type="button" id="toggleList" class="btn" style="background:linear-gradient(90deg,#41dfc6,#72ffe8)">👀 Ver dedicatorias</button>
-          <button type="button" id="exportTXT" class="btn" style="background:#2feaa0">Exportar .TXT</button>
+          <a class="btn" id="openSheet" target="_blank" rel="noopener" style="background:#2feaa0">Abrir hoja de dedicatorias</a>
+          <button type="button" id="restoreHiddenDedis" class="btn">Restaurar dedicatorias ocultas</button>
+          <button type="button" id="refreshDedis" class="btn">Refrescar</button>
         </div>
       </form>
       <div class="dedi-list" id="dediList" style="display:none"></div>
@@ -211,10 +213,12 @@
 
 <script>
   /* ===== CONFIG ===== */
-  const API_URL = 'https://script.google.com/macros/s/AKfycbzxJfmxw2gHBbyKexCtX_jC5N9kxG7EWs3UC38Kq-cHR_uwzmF2VJ5X8FcJSzA9bZpw/exec';
-  const HERO_URL = 'https://i.ibb.co/4nTRHhrs/IMG-20250929-WA0056.jpg';
-  const LOGO_URL = 'https://i.ibb.co/0VCsT0HB/LOGO-Cytlalli-pdf-page-0001.jpg';
+  const API_URL   = 'https://script.google.com/macros/s/AKfycbxn5bLYVyPVmSjnyoFiVhq5I77roChvEr0ZzVyllxyScA7r8_ML4XRvqaImAF7TFVoc/exec';
+  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Bu80J6TCRat1Uawd8nLiqYyBwxbS72pqswzrvXm9kX8/edit#gid=0';
+  const HERO_URL  = 'https://i.ibb.co/4nTRHhrs/IMG-20250929-WA0056.jpg';
+  const LOGO_URL  = 'https://i.ibb.co/0VCsT0HB/LOGO-Cytlalli-pdf-page-0001.jpg';
   heroImg.src = HERO_URL; logoImg.src = LOGO_URL;
+  document.getElementById('openSheet').href = SHEET_URL;
 
   /* ===== Menú / Navegación ===== */
   const drawer = document.getElementById('drawer');
@@ -223,7 +227,7 @@
   document.getElementById('menuDedicatorias').onclick = () => { drawer.classList.remove('show'); document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'}); };
   resetBtn.onclick = () => { localStorage.removeItem('hidden_ids_v1'); location.reload(); };
   document.getElementById('goWrite').onclick = () => document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'});
-  document.getElementById('goRead').onclick = () => { document.getElementById('dediList').style.display='block'; document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'}); };
+  document.getElementById('goRead').onclick  = () => { document.getElementById('dediList').style.display='block'; document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'}); };
 
   /* ===== Fondo burbujas ===== */
   const bubbles = document.getElementById('bubbles');
@@ -293,12 +297,27 @@
   }
   btn.addEventListener('click', uploadQueue);
 
-  /* ===== Render de imágenes/vídeos (usa las URLs del backend) ===== */
+  /* ===== Miniaturas robustas (móvil/PC) ===== */
+  function setBestImage(img, id){
+    const urls = [
+      `https://lh3.googleusercontent.com/d/${id}=w800-h800-n-k-no`,
+      `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
+      `https://drive.google.com/uc?export=view&id=${id}`
+    ];
+    let i=0; const tryNext=()=>{ if(i>=urls.length) return; img.src=urls[i++]; };
+    img.onerror = tryNext; tryNext();
+    img.loading='lazy'; img.decoding='async'; img.referrerPolicy='no-referrer';
+  }
+  function fileIsVideo(mt){ return (mt||'').startsWith('video/'); }
+  function downloadHref(id){ return `https://drive.google.com/uc?export=download&id=${id}`; }
+
+  /* ===== Ocultar tarjetas de GALERÍA (solo front) ===== */
   const HIDE_KEY='hidden_ids_v1';
   const hidden=new Set(JSON.parse(localStorage.getItem(HIDE_KEY)||'[]'));
   function hideId(id){ hidden.add(id); localStorage.setItem(HIDE_KEY,JSON.stringify([...hidden])); }
   function attachHide(btn,id,card){ btn.addEventListener('click',()=>{ hideId(id); card.style.transition='transform .25s, opacity .25s'; card.style.transform='scale(.96)'; card.style.opacity='0'; setTimeout(()=>card.remove(),220); }); }
 
+  /* ===== Render GALERÍA ===== */
   function renderAll(files){
     const visible=files.filter(f=>!hidden.has(f.id));
     emptyMsg.style.display=visible.length?'none':'block';
@@ -312,19 +331,20 @@
       attachHide(hide,f.id,slide); slide.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb';
-      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=f.isVideo?'Video':'Foto';
+      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=fileIsVideo(f.mimeType)?'Video':'Foto';
 
-      let m=f.isVideo?document.createElement('video'):document.createElement('img');
-      if(f.isVideo){
-        m.src=f.downloadUrl; m.muted=true; m.playsInline=true; m.controls=true; m.poster=f.thumb;
+      let m=fileIsVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
+      if(fileIsVideo(f.mimeType)){
+        m.src=downloadHref(f.id); m.muted=true; m.playsInline=true; m.controls=true;
+        m.poster=`https://drive.google.com/thumbnail?id=${f.id}&sz=w800`;
       }else{
-        m.src=f.thumb; m.loading='lazy'; m.decoding='async'; m.alt=f.name||'';
+        setBestImage(m, f.id); m.alt=f.name||'';
       }
       t.appendChild(m); t.appendChild(chip);
 
       const meta=document.createElement('div'); meta.className='meta';
       const name=document.createElement('div'); name.className='name'; name.textContent=f.name||f.id;
-      const a=document.createElement('a'); a.className='dl'; a.href=f.downloadUrl; a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
+      const a=document.createElement('a'); a.className='dl'; a.href=downloadHref(f.id); a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
       meta.appendChild(name); meta.appendChild(a);
 
       slide.appendChild(t); slide.appendChild(meta); cfrag.appendChild(slide);
@@ -339,17 +359,18 @@
       attachHide(hide,f.id,card); card.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb-square';
-      let m=f.isVideo?document.createElement('video'):document.createElement('img');
-      if(f.isVideo){
-        m.src=f.downloadUrl; m.muted=true; m.playsInline=true; m.controls=true; m.poster=f.thumb;
+      let m=fileIsVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
+      if(fileIsVideo(f.mimeType)){
+        m.src=downloadHref(f.id); m.muted=true; m.playsInline=true; m.controls=true;
+        m.poster=`https://drive.google.com/thumbnail?id=${f.id}&sz=w800`;
       }else{
-        m.src=f.thumb; m.loading='lazy'; m.decoding='async'; m.alt=f.name||'';
+        setBestImage(m, f.id); m.alt=f.name||'';
       }
       t.appendChild(m);
 
       const meta=document.createElement('div'); meta.className='meta';
       const name=document.createElement('div'); name.className='name'; name.textContent=f.name||f.id;
-      const a=document.createElement('a'); a.className='dl'; a.href=f.downloadUrl; a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
+      const a=document.createElement('a'); a.className='dl'; a.href=downloadHref(f.id); a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
       meta.appendChild(name); meta.appendChild(a);
 
       card.appendChild(t); card.appendChild(meta); gfrag.appendChild(card);
@@ -357,26 +378,61 @@
     gallery.innerHTML=''; gallery.appendChild(gfrag);
   }
 
-  /* ===== Dedicatorias (usa tu Apps Script) ===== */
+  /* ===== Dedicatorias ===== */
   const dediForm = document.getElementById('dediForm');
   const dediList = document.getElementById('dediList');
   const toggleListBtn = document.getElementById('toggleList');
-  const exportBtn = document.getElementById('exportTXT');
+  const restoreHiddenDedisBtn = document.getElementById('restoreHiddenDedis');
+  const refreshDedisBtn = document.getElementById('refreshDedis');
+
+  const HIDE_DEDIS_KEY='hidden_dedis_v1';
+  const hiddenDedis=new Set(JSON.parse(localStorage.getItem(HIDE_DEDIS_KEY)||'[]'));
+  function hideDedi(id){ hiddenDedis.add(id); localStorage.setItem(HIDE_DEDIS_KEY,JSON.stringify([...hiddenDedis])); }
+  function restoreHiddenDedis(){ hiddenDedis.clear(); localStorage.removeItem(HIDE_DEDIS_KEY); renderDedis(_dedisCache); }
+
+  let _dedisCache=[];
+
+  function renderDedis(items){
+    _dedisCache = items.slice();
+    dediList.innerHTML='';
+    const filtered = items.filter(d=>!hiddenDedis.has(String(d.id)));
+    filtered.forEach(d=>{
+      const card=document.createElement('div');
+      card.style.cssText='background:#0f131a;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;position:relative';
+      const fecha = d.fecha ? new Date(d.fecha).toLocaleString() : '';
+      card.innerHTML = `
+        <div style="font-weight:800;margin-bottom:4px">${d.nombre||'Anónimo'}
+          <span style="color:#9fb0c7;font-weight:400">• ${fecha}</span>
+        </div>
+        <div style="white-space:pre-wrap">${(d.mensaje||'').toString()}</div>
+      `;
+      // Ocultar (X)
+      const x=document.createElement('div');
+      x.className='hideBtn'; x.textContent='×'; x.title='Ocultar esta dedicatoria';
+      x.style.left='auto'; x.style.right='8px';
+      x.onclick=()=>{ hideDedi(String(d.id)); card.remove(); };
+      card.appendChild(x);
+      // Eliminar (🗑️)
+      const del=document.createElement('button');
+      del.textContent='🗑️'; del.title='Eliminar (borra en la hoja)'; del.style.cssText='position:absolute;top:8px;right:44px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:4px 8px;cursor:pointer';
+      del.onclick=async()=>{
+        if(!confirm('¿Eliminar esta dedicatoria?')) return;
+        try{
+          await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({dediDelete:d.id})});
+          card.remove();
+        }catch(e){ alert('No se pudo eliminar.'); }
+      };
+      card.appendChild(del);
+
+      dediList.appendChild(card);
+    });
+  }
 
   async function loadDedicatorias(){
     const res = await fetchJsonp('dedis');
     if(!(res&&res.ok)) return;
     const items = res.dedis || [];
-    // pinta
-    dediList.innerHTML='';
-    items.forEach(d=>{
-      const card=document.createElement('div');
-      card.style.cssText='background:#0f131a;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px';
-      const fecha = d.fecha ? new Date(d.fecha).toLocaleString() : '';
-      card.innerHTML = `<div style="font-weight:800;margin-bottom:4px">${d.nombre||'Anónimo'} <span style="color:#9fb0c7;font-weight:400">• ${fecha}</span></div>
-                        <div style="white-space:pre-wrap">${(d.mensaje||'').toString()}</div>`;
-      dediList.appendChild(card);
-    });
+    renderDedis(items);
   }
 
   dediForm.addEventListener('submit', async (e)=>{
@@ -391,25 +447,12 @@
       showToast('💌 ¡Gracias por tu dedicatoria!');
       await loadDedicatorias();
       dediList.style.display='block';
-    }catch(err){ alert('Error al guardar la dedicatoria: '+err.message); }
+    }catch(err){ alert('Error al guardar la dedicatoria'); }
   });
 
-  toggleListBtn.onclick = async ()=>{
-    await loadDedicatorias();
-    dediList.style.display = 'block';
-  };
-
-  exportBtn.onclick = async ()=>{
-    await loadDedicatorias();
-    const cards = Array.from(dediList.children);
-    const text = cards.map(c=>c.innerText).join('\n\n-------------------------\n\n');
-    const blob = new Blob([text], {type:'text/plain'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'dedicatorias.txt';
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-  };
+  toggleListBtn.onclick = async ()=>{ await loadDedicatorias(); dediList.style.display='block'; };
+  restoreHiddenDedisBtn.onclick = ()=>{ restoreHiddenDedis(); dediList.style.display='block'; };
+  refreshDedisBtn.onclick = async ()=>{ await loadDedicatorias(); dediList.style.display='block'; };
 
   /* ===== Inicio ===== */
   refreshGallery({retries:1,wait:800});
