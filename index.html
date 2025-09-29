@@ -199,7 +199,7 @@
         <div class="dedi-actions">
           <button type="submit" class="btn">Enviar dedicatoria</button>
           <button type="button" id="toggleList" class="btn" style="background:linear-gradient(90deg,#41dfc6,#72ffe8)">👀 Ver dedicatorias</button>
-          <button type="button" id="downloadDedis" class="btn" style="background:#2feaa0">Descargar dedicatorias</button>
+          <button type="button" id="downloadDedis" class="btn" style="background:#2feaa0">⬇️ Descargar dedicatorias</button>
         </div>
       </form>
       <div class="dedi-list" id="dediList" style="display:none"></div>
@@ -212,6 +212,7 @@
 <script>
   /* ===== CONFIG ===== */
   const API_URL   = 'https://script.google.com/macros/s/AKfycbxp09tad2Jj4_yVEuEG6TKM2n4rCCVTM6KtANJlkp3AABifAhfZvuRGMsRr3rsiOL4/exec';
+  const HERO_URL  = 'https://i.ibb.co/4nTRHhrs/IMG-20250929-WA0056.jpg';
   const LOGO_URL  = 'https://i.ibb.co/0VCsT0HB/LOGO-Cytlalli-pdf-page-0001.jpg';
   heroImg.src = HERO_URL; logoImg.src = LOGO_URL;
 
@@ -285,11 +286,9 @@
     for(const it of queue){ const buf=await it.file.arrayBuffer(); payload.push({name:it.file.name,mimeType:it.file.type,bytes:bytesToBase64(buf)}); }
 
     try{
-      // no-cors → respuesta opaca, pero el server recibe y guarda
       await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({files:payload})});
     }catch(e){ alert('Error subiendo: '+e.message); }
 
-    // limpiamos UI y refrescamos después de un pequeño delay (Drive puede tardar)
     setTimeout(async ()=>{
       await refreshGallery();
       queue.forEach(q=>q.progressEl.style.width='100%');
@@ -300,19 +299,19 @@
   }
   btn.addEventListener('click', uploadQueue);
 
-  /* ===== Miniaturas robustas (móvil/PC) ===== */
-  function setBestImage(img, id){
+  /* ===== Miniaturas & descargas ===== */
+  function setBestImage(el, id){
     const urls = [
       `https://lh3.googleusercontent.com/d/${id}=w800-h800-n-k-no`,
       `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
       `https://drive.google.com/uc?export=view&id=${id}`
     ];
-    let i=0; const tryNext=()=>{ if(i>=urls.length) return; img.src=urls[i++]; };
-    img.onerror = tryNext; tryNext();
-    img.loading='lazy'; img.decoding='async'; img.referrerPolicy='no-referrer';
+    let i=0; const tryNext=()=>{ if(i>=urls.length) return; el.src=urls[i++]; };
+    el.onerror = tryNext; tryNext();
+    el.loading='lazy'; el.decoding='async'; el.referrerPolicy='no-referrer';
   }
-  function fileIsVideo(mt){ return (mt||'').startsWith('video/'); }
   function downloadHref(id){ return `https://drive.google.com/uc?export=download&id=${id}`; }
+  function isVideo(mt){ return (mt||'').startsWith('video/'); }
 
   /* ===== Ocultar tarjetas de GALERÍA (solo front) ===== */
   const HIDE_KEY='hidden_ids_v1';
@@ -320,12 +319,10 @@
   function hideId(id){ hidden.add(id); localStorage.setItem(HIDE_KEY,JSON.stringify([...hidden])); }
   function attachHide(btn,id,card){ btn.addEventListener('click',()=>{ hideId(id); card.style.transition='transform .25s, opacity .25s'; card.style.transform='scale(.96)'; card.style.opacity='0'; setTimeout(()=>card.remove(),220); }); }
 
-  /* ===== Render de carrusel + grid ===== */
+  /* ===== Render carrusel + grid ===== */
   function renderAll(files){
     const visible=files.filter(f=>!hidden.has(f.id));
     emptyMsg.style.display=visible.length?'none':'block';
-
-    // orden simple: nombres/ids descendentes (se ven primero los subidos nuevos)
     visible.sort((a,b)=> String(b.name||b.id).localeCompare(a.name||a.id));
 
     // Destacados
@@ -337,14 +334,11 @@
       attachHide(hide,f.id,slide); slide.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb';
-      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=fileIsVideo(f.mimeType)?'Video':'Foto';
+      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=isVideo(f.mimeType)?'Video':'Foto';
 
-      let m=fileIsVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
-      if(fileIsVideo(f.mimeType)){
-        m.src=downloadHref(f.id); m.muted=true; m.playsInline=true; m.controls=true;
-      }else{
-        setBestImage(m,f.id); m.alt=f.name||'';
-      }
+      let m=isVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
+      if(isVideo(f.mimeType)){ m.src=downloadHref(f.id); m.muted=true; m.playsInline=true; m.controls=true; }
+      else { setBestImage(m,f.id); m.alt=f.name||''; }
       t.appendChild(m); t.appendChild(chip);
 
       const meta=document.createElement('div'); meta.className='meta';
@@ -364,12 +358,9 @@
       attachHide(hide,f.id,card); card.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb-square';
-      let m=fileIsVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
-      if(fileIsVideo(f.mimeType)){
-        m.src=downloadHref(f.id); m.muted=true; m.playsInline=true; m.controls=true;
-      }else{
-        setBestImage(m,f.id); m.alt=f.name||'';
-      }
+      let m=isVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
+      if(isVideo(f.mimeType)){ m.src=downloadHref(f.id); m.muted=true; m.playsInline=true; m.controls=true; }
+      else { setBestImage(m,f.id); m.alt=f.name||''; }
       t.appendChild(m);
 
       const meta=document.createElement('div'); meta.className='meta';
@@ -425,7 +416,6 @@
       await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({dedi:{nombre,mensaje}})});
       document.getElementById('dediNombre').value='';
       document.getElementById('dediMsg').value='';
-      // espera breve y recarga lista
       setTimeout(async ()=>{ await loadDedicatorias(); dediList.style.display='block'; showToast('💌 ¡Gracias por tu dedicatoria!'); }, 800);
     }catch(err){ alert('Error al guardar la dedicatoria: '+err.message); }
   });
@@ -451,4 +441,3 @@
 </script>
 </body>
 </html>
-
