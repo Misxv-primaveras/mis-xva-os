@@ -5,110 +5,151 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Mis XV – Memories</title>
 <style>
-  /* Paleta inspirada en el vestido: bronce + carbón + esmeralda */
   :root{
-    --bg:#0e0f12;
-    --card:#14161c;
-    --muted:#b7becb;
-    --copper1:#a66a54;  /* bronce suave */
-    --copper2:#d19a7d;  /* bronce claro */
-    --emerald:#22c3a6;  /* acento esmeralda */
-    --radius:18px;
+    --bg:#0e0f12; --card:#14161c; --muted:#b7becb;
+    --copper1:#a66a54; --copper2:#d19a7d; --emerald:#22c3a6;
+    --glass:rgba(255,255,255,.06); --radius:18px;
   }
   *{box-sizing:border-box}
+  html,body{height:100%}
   body{
     margin:0; color:#f7f9fc;
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;
-    background:
-      radial-gradient(1200px 600px at 50% -10%, #1d212a 0, var(--bg) 55%),
-      linear-gradient(180deg,#0b0c10, #0e0f12);
+    background: radial-gradient(1200px 600px at 50% -10%, #1b202a 0, var(--bg) 60%);
+    overflow-x:hidden;
   }
+
+  /* Fondo animado */
+  .bg-anim{
+    position:fixed; inset:0; z-index:-2;
+    background:
+      radial-gradient(1200px 600px at 20% -20%, #252b36 0, rgba(0,0,0,0) 60%),
+      radial-gradient(900px 500px at 80% -10%, #1f2430 0, rgba(0,0,0,0) 65%),
+      linear-gradient(180deg,#0b0c10, #0e0f12);
+    animation: hue 22s linear infinite;
+  }
+  @keyframes hue { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+  .bubbles{position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden}
+  .bubble{position:absolute; width:12px; height:12px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #72ffe8 0, #41dfc6 40%, transparent 70%);
+    opacity:.12; animation: float 18s linear infinite; filter:blur(1px)}
+  @keyframes float{
+    from{ transform:translateY(110vh) translateX(0)}
+    to{ transform:translateY(-10vh) translateX(40px)}
+  }
+
   /* Header */
-  header{ text-align:center; padding:28px 16px 6px }
-  header h1{ margin:6px 0 2px; font-size:clamp(22px,3.6vw,36px); letter-spacing:.3px }
+  header{ text-align:center; padding:26px 16px 6px }
+  .hero{
+    display:flex; gap:12px; align-items:center; justify-content:center; margin-bottom:6px;
+  }
+  .avatar{
+    width:54px; height:54px; border-radius:50%;
+    background:linear-gradient(135deg,var(--copper1),var(--copper2));
+    box-shadow:0 6px 18px rgba(209,154,125,.35); flex:0 0 auto;
+  }
+  header h1{ margin:6px 0 2px; font-size:clamp(22px,3.6vw,36px); letter-spacing:.2px }
   header p{ margin:0; color:var(--muted); font-size:14px }
+  .container{ max-width:1100px; margin:0 auto; padding:12px 16px 44px }
 
-  .container{ max-width:1100px; margin:0 auto; padding:12px 16px 40px }
-
-  /* Tarjeta de subida */
+  /* Uploader */
   .uploader{
-    background:linear-gradient(180deg, #151821, #11141a);
+    background:linear-gradient(180deg,#151821,#11141a);
     border-radius:var(--radius);
     padding:16px; display:grid; gap:12px;
-    box-shadow:0 20px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
-    border:1px solid rgba(255,255,255,.06);
+    box-shadow:0 24px 48px rgba(0,0,0,.35);
+    border:1px solid var(--glass);
+    animation: pop .6s ease;
   }
+  @keyframes pop{ from{transform:scale(.98); opacity:0} to{transform:scale(1); opacity:1} }
   .row{ display:grid; gap:12px; grid-template-columns:1fr auto; align-items:center }
   .dropzone{
-    border:2px dashed rgba(214,160,136,.5);
-    border-radius:16px; padding:18px; text-align:center; cursor:pointer;
-    background:#131722; transition:.25s;
+    border:2px dashed rgba(214,160,136,.5); border-radius:16px; padding:18px;
+    text-align:center; cursor:pointer; background:#131722; transition:.25s;
   }
-  .dropzone:hover{ border-color:var(--copper2); box-shadow:0 0 0 2px rgba(209,154,125,.25) inset }
+  .dropzone:hover{ border-color:var(--copper2); box-shadow:0 0 0 2px rgba(209,154,125,.25) inset; transform:translateY(-1px) }
   .help{ color:var(--muted); font-size:13px }
-
   .btn{
     background:linear-gradient(90deg,var(--copper1),var(--copper2));
     color:#0d0f14; border:0; padding:12px 16px; border-radius:14px;
     font-weight:800; cursor:pointer; letter-spacing:.2px;
-    box-shadow:0 8px 20px rgba(209,154,125,.35);
+    box-shadow:0 10px 24px rgba(209,154,125,.35); transition:.2s;
   }
+  .btn:hover{ transform:translateY(-1px) }
   .btn:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none }
-
-  /* Input accesible para iOS/Android */
   .visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0 }
 
   /* Previews */
   .previews{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px }
-  .preview{ position:relative; background:#0d1018; border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:6px }
+  .preview{ position:relative; background:#0d1018; border:1px solid var(--glass); border-radius:12px; padding:6px; animation: fadeIn .4s ease }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
   .preview img,.preview video{ width:100%; height:100px; object-fit:cover; border-radius:8px; display:block }
   .bar{ position:absolute; left:6px; right:6px; bottom:6px; height:6px; border-radius:6px; background:#222a39; overflow:hidden }
-  .bar>span{ display:block; width:0%; height:100%;
-    background:linear-gradient(90deg, var(--emerald), #6ff0d8); transition:width .2s }
+  .bar>span{ display:block; width:0%; height:100%; background:linear-gradient(90deg,var(--emerald),#6ff0d8); transition:width .2s }
 
-  /* Carrusel tipo app */
+  /* Botón ocultar (X solo frontend) */
+  .hideBtn{
+    position:absolute; top:8px; left:8px; width:28px; height:28px; border-radius:999px;
+    display:grid; place-items:center; font-weight:900; cursor:pointer; user-select:none;
+    background:rgba(14,17,22,.65); border:1px solid rgba(255,255,255,.2); color:#fff;
+    backdrop-filter:blur(4px); line-height:0; transform:scale(.95); transition:.2s;
+  }
+  .hideBtn:hover{ background:rgba(255,80,80,.75); border-color:rgba(255,255,255,.35); transform:scale(1) }
+
+  /* Carousel */
   .carousel-wrap{ margin-top:20px }
-  .title{ margin:0 6px 8px; color:#e8eef8; font-size:16px }
+  .title{ margin:0 6px 10px; color:#e8eef8; font-size:16px }
   .carousel{ display:flex; gap:12px; overflow:auto; scroll-snap-type:x mandatory; padding-bottom:6px }
   .carousel::-webkit-scrollbar{ display:none }
   .slide{
     flex:0 0 78vw; max-width:440px; scroll-snap-align:center;
-    background:linear-gradient(180deg,#161a24,#11141a);
-    border:1px solid rgba(255,255,255,.06); border-radius:16px; overflow:hidden;
+    background:linear-gradient(180deg,#161a24,#11141a); border:1px solid var(--glass);
+    border-radius:16px; overflow:hidden; position:relative; animation: fadeIn .45s ease;
   }
-  .thumb{ aspect-ratio:16/9; background:#0b0e14 }
+  .thumb{ aspect-ratio:16/9; background:#0b0e14; position:relative }
+  .chip{ position:absolute; top:10px; left:46px; background:rgba(14,17,22,.6); border:1px solid rgba(255,255,255,.12); color:#fff; padding:4px 8px; font-size:11px; border-radius:999px; backdrop-filter:blur(4px)}
   .slide img,.slide video{ width:100%; height:100%; object-fit:cover; display:block }
-  .chip{ position:absolute; top:10px; left:10px; background:rgba(14,17,22,.6); border:1px solid rgba(255,255,255,.12); color:#fff; padding:4px 8px; font-size:11px; border-radius:999px; backdrop-filter:blur(4px)}
   .slide .meta{ display:flex; justify-content:space-between; align-items:center; padding:10px }
   .name{ font-size:13px; color:#f3f7ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-  .dl{ font-size:12px; color:#0e1116; background:linear-gradient(90deg,#41dfc6,#72ffe8); border-radius:10px; padding:6px 8px; font-weight:800; text-decoration:none }
+  .dl{ font-size:12px; color:#0e1116; background:linear-gradient(90deg,#41dfc6,#72ffe8); border-radius:10px; padding:6px 8px; font-weight:800; text-decoration:none; transition:.2s }
+  .dl:hover{ transform:translateY(-1px) }
 
-  /* Galería grid */
+  /* Grid */
   .gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px }
-  .card{ background:linear-gradient(180deg,#151a23,#10131a); border:1px solid rgba(255,255,255,.06); border-radius:16px; overflow:hidden; display:flex; flex-direction:column }
-  .thumb-square{ aspect-ratio:1/1; background:#0b0e14 }
+  .card{
+    background:linear-gradient(180deg,#151a23,#10131a); border:1px solid var(--glass);
+    border-radius:16px; overflow:hidden; display:flex; flex-direction:column; position:relative; animation: fadeIn .45s ease;
+  }
+  .thumb-square{ aspect-ratio:1/1; background:#0b0e14; position:relative }
   .thumb-square img,.thumb-square video{ width:100%; height:100%; object-fit:cover }
   .meta{ padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px }
   @media (min-width:900px){ .slide{ flex-basis:380px } }
 </style>
 </head>
 <body>
+  <!-- Fondo animado -->
+  <div class="bg-anim"></div>
+  <div class="bubbles" id="bubbles"></div>
+
   <header>
-    <h1>Mis XV – Memories</h1>
-    <p>Sube tus fotos y videos. Se verán aquí mismo y podrás descargarlos.</p>
+    <div class="hero">
+      <div class="avatar" id="avatar"></div>
+      <div>
+        <h1>Mis XV – Memories</h1>
+        <p>Sube tus fotos y videos. Se verán aquí mismo y podrás descargarlos.</p>
+      </div>
+    </div>
   </header>
 
   <main class="container">
     <section class="uploader">
       <div class="row">
-        <!-- LABEL para abrir el selector (móviles) -->
         <label class="dropzone" for="fileInput">
           <div><strong>Toca o arrastra archivos aquí</strong></div>
           <div class="help">Formato: JPG, PNG, HEIC*, MP4, MOV, etc.</div>
         </label>
         <button class="btn" id="uploadBtn" disabled>Subir recuerdos a la nube</button>
       </div>
-      <!-- input accesible (no display:none) -->
       <input id="fileInput" class="visually-hidden" type="file" accept="image/*,video/*" multiple>
       <div class="previews" id="previews"></div>
     </section>
@@ -125,36 +166,48 @@
   </main>
 
 <script>
-  // URL de tu Apps Script
+  // 1) Pega aquí la URL actual de tu Web App (/exec)
   const API_URL = 'https://script.google.com/macros/s/AKfycbyo7N318WzCzyqacSrgIdXfTPcCMFjB9MNndk8mYsB0u7GKoD4iwb31oYu48znpRHM/exec';
 
+  // 2) Variables de UI
   const input = document.getElementById('fileInput');
   const btn = document.getElementById('uploadBtn');
   const previews = document.getElementById('previews');
   const gallery = document.getElementById('gallery');
   const carousel = document.getElementById('carousel');
 
+  // 3) Burbujeo de fondo
+  const bubbles = document.getElementById('bubbles');
+  for(let i=0;i<20;i++){
+    const b=document.createElement('div'); b.className='bubble';
+    b.style.left = Math.random()*100+'%';
+    b.style.animationDuration = (14+Math.random()*10)+'s';
+    b.style.animationDelay = (-Math.random()*18)+'s';
+    b.style.transform = 'translateX('+(Math.random()*60-30)+'px)';
+    bubbles.appendChild(b);
+  }
+
+  // 4) Cola de subida
   let queue = [];
 
-  function bytesToBase64(arrBuf){
-    let binary=''; const bytes=new Uint8Array(arrBuf);
-    for(let i=0;i<bytes.byteLength;i++) binary+=String.fromCharCode(bytes[i]);
-    return btoa(binary);
+  // 5) Ocultos (solo frontend): persiste IDs en localStorage
+  const HIDE_KEY = 'hidden_ids_v1';
+  const hidden = new Set(JSON.parse(localStorage.getItem(HIDE_KEY)||'[]'));
+  function hideId(id){
+    hidden.add(id);
+    localStorage.setItem(HIDE_KEY, JSON.stringify([...hidden]));
   }
+
+  // Utilidades
+  function bytesToBase64(arrBuf){ let b=''; const x=new Uint8Array(arrBuf); for(let i=0;i<x.byteLength;i++) b+=String.fromCharCode(x[i]); return btoa(b); }
 
   function addPreview(file){
     const wrap=document.createElement('div'); wrap.className='preview';
-    let media;
-    if(file.type.startsWith('video/')){
-      media=document.createElement('video'); media.src=URL.createObjectURL(file); media.muted=true; media.playsInline=true;
-    }else{
-      media=document.createElement('img'); media.src=URL.createObjectURL(file); media.alt=file.name;
-    }
-    const bar=document.createElement('div'); bar.className='bar';
-    const span=document.createElement('span'); bar.appendChild(span);
-    wrap.appendChild(media); wrap.appendChild(bar);
-    previews.appendChild(wrap);
-    return span;
+    let media = file.type.startsWith('video/') ? document.createElement('video') : document.createElement('img');
+    media.src = URL.createObjectURL(file); if(media.tagName==='VIDEO'){ media.muted=true; media.playsInline=true; }
+    if(media.tagName==='IMG') media.alt=file.name;
+    const bar=document.createElement('div'); bar.className='bar'; const span=document.createElement('span'); bar.appendChild(span);
+    wrap.appendChild(media); wrap.appendChild(bar); previews.appendChild(wrap); return span;
   }
 
   function onFilesSelected(list){
@@ -165,111 +218,120 @@
     });
     btn.disabled = queue.length===0;
   }
-
-  // Eventos
   input.addEventListener('change', e=>onFilesSelected(e.target.files));
   document.addEventListener('dragover', e=>{ e.preventDefault(); });
   document.addEventListener('drop', e=>{ e.preventDefault(); onFilesSelected(e.dataTransfer.files); });
 
-  // Enviar sin preflight (evita "Failed to fetch")
+  // Subir (no-cors) y refrescar
   async function uploadQueue(){
-    btn.disabled = true;
+    btn.disabled=true;
     const payloadFiles=[];
-    for(const item of queue){
-      const buf=await item.file.arrayBuffer();
-      payloadFiles.push({ name:item.file.name, mimeType:item.file.type, bytes:bytesToBase64(buf) });
-    }
+    for(const item of queue){ const buf=await item.file.arrayBuffer(); payloadFiles.push({name:item.file.name,mimeType:item.file.type,bytes:bytesToBase64(buf)}); }
     try{
-      const resp = await fetch(API_URL,{
-        method:'POST',
-        headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // <- evita preflight
-        body:JSON.stringify({ files: payloadFiles })
-      });
-      if(!resp.ok) throw new Error(resp.status+' '+resp.statusText);
-      const res=await resp.json();
-
-      queue.forEach(q=>q.progressEl.style.width='100%');
-      queue=[]; input.value=''; setTimeout(()=>{previews.innerHTML='';},600);
-
-      if(res && res.ok) renderAll(res.files,true);
-    }catch(err){
-      alert('Error subiendo: '+err.message);
-    }finally{
-      btn.disabled=false;
-    }
+      await fetch(API_URL,{ method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({files:payloadFiles}) });
+      queue.forEach(q=>q.progressEl.style.width='100%'); queue=[]; input.value=''; setTimeout(()=>{previews.innerHTML='';},600);
+      setTimeout(loadGalleryJSONP, 900);
+    }catch(err){ alert('Error subiendo: '+err.message); }
+    finally{ btn.disabled=false; }
   }
   btn.addEventListener('click', uploadQueue);
 
+  // URLs de media
   function drivePreviewSrc(file){
-    if(file.mimeType.startsWith('image/')) return `https://drive.google.com/uc?export=view&id=${file.id}`;
-    if(file.mimeType.startsWith('video/')) return `https://drive.google.com/uc?export=download&id=${file.id}`;
+    if(file.mimeType && file.mimeType.startsWith('image/')) return `https://drive.google.com/uc?export=view&id=${file.id}`;
+    if(file.mimeType && file.mimeType.startsWith('video/')) return `https://drive.google.com/uc?export=download&id=${file.id}`;
     return `https://drive.google.com/uc?export=view&id=${file.id}`;
   }
   function driveDownloadHref(file){ return `https://drive.google.com/uc?export=download&id=${file.id}`; }
 
-  function renderAll(files, prepend=false){
-    // Carrusel (últimos 10)
-    const top = files.slice(0,10);
+  // Ocultar tarjeta con animación (solo frontend)
+  function attachHide(btn, id, card){
+    btn.addEventListener('click', ()=>{
+      hideId(id);
+      card.style.transition='transform .25s ease, opacity .25s ease';
+      card.style.transform='scale(.96)';
+      card.style.opacity='0';
+      setTimeout(()=>{ card.remove(); }, 220);
+    });
+  }
+
+  function renderAll(files){
+    // Filtra los ocultos
+    const visible = files.filter(f=>!hidden.has(f.id));
+
+    // Carrusel
+    const top=visible.slice(0,10);
     const cfrag=document.createDocumentFragment();
     top.forEach(f=>{
       const slide=document.createElement('div'); slide.className='slide';
-      const t=document.createElement('div'); t.className='thumb'; t.style.position='relative';
-      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=f.mimeType.startsWith('video/')?'Video':'Foto';
-      let m;
-      if(f.mimeType.startsWith('video/')){ m=document.createElement('video'); m.src=drivePreviewSrc(f); m.muted=true; m.playsInline=true; m.controls=true; }
-      else{ m=document.createElement('img'); m.src=drivePreviewSrc(f); m.alt=f.name; }
+      const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
+      attachHide(hide, f.id, slide);
+      slide.appendChild(hide);
+
+      const t=document.createElement('div'); t.className='thumb';
+      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=(f.mimeType||'').startsWith('video/')?'Video':'Foto';
+      let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
+      m.src=drivePreviewSrc(f); if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; } else m.alt=f.name||'';
       t.appendChild(m); t.appendChild(chip);
+
       const meta=document.createElement('div'); meta.className='meta';
-      const name=document.createElement('div'); name.className='name'; name.textContent=f.name;
+      const name=document.createElement('div'); name.className='name'; name.textContent=f.name||f.id;
       const a=document.createElement('a'); a.className='dl'; a.href=driveDownloadHref(f); a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
       meta.appendChild(name); meta.appendChild(a);
-      slide.appendChild(t); slide.appendChild(meta);
-      cfrag.appendChild(slide);
-    });
-    if(prepend) carousel.prepend(cfrag); else { carousel.innerHTML=''; carousel.appendChild(cfrag); }
 
-    // Grid completo
+      slide.appendChild(t); slide.appendChild(meta); cfrag.appendChild(slide);
+    });
+    carousel.innerHTML=''; carousel.appendChild(cfrag);
+
+    // Grid
     const gfrag=document.createDocumentFragment();
-    files.forEach(f=>{
+    visible.forEach(f=>{
       const card=document.createElement('div'); card.className='card';
+      const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
+      attachHide(hide, f.id, card);
+      card.appendChild(hide);
+
       const t=document.createElement('div'); t.className='thumb-square';
-      let m;
-      if(f.mimeType.startsWith('video/')){ m=document.createElement('video'); m.src=drivePreviewSrc(f); m.muted=true; m.playsInline=true; m.controls=true; }
-      else{ m=document.createElement('img'); m.src=drivePreviewSrc(f); m.alt=f.name; }
+      let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
+      m.src=drivePreviewSrc(f); if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; } else m.alt=f.name||'';
       t.appendChild(m);
+
       const meta=document.createElement('div'); meta.className='meta';
-      const name=document.createElement('div'); name.className='name'; name.textContent=f.name;
+      const name=document.createElement('div'); name.className='name'; name.textContent=f.name||f.id;
       const a=document.createElement('a'); a.className='dl'; a.href=driveDownloadHref(f); a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
       meta.appendChild(name); meta.appendChild(a);
-      card.appendChild(t); card.appendChild(meta);
-      gfrag.appendChild(card);
+
+      card.appendChild(t); card.appendChild(meta); gfrag.appendChild(card);
     });
-    if(prepend) gallery.prepend(gfrag); else { gallery.innerHTML=''; gallery.appendChild(gfrag); }
+    gallery.innerHTML=''; gallery.appendChild(gfrag);
+    startAutoplay();
   }
 
-  async function loadGallery(){
-    try{
-      const res=await fetch(API_URL).then(r=>r.json());
-      if(res && res.ok){ renderAll(res.files); startAutoplay(); }
-    }catch(e){ console.error(e); }
+  // JSONP para cargar sin CORS
+  function loadGalleryJSONP(){
+    const cb='jsonp_'+Math.random().toString(36).slice(2);
+    window[cb]=(res)=>{ try{ if(res&&res.ok) renderAll(res.files||[]); } finally{ delete window[cb]; s.remove(); } };
+    const s=document.createElement('script');
+    s.src = API_URL + (API_URL.includes('?')?'&':'?') + 'callback=' + cb;
+    s.async = true; document.body.appendChild(s);
   }
 
-  // Autoplay del carrusel
+  // Autoplay carrusel
   let autoplayTimer;
   function startAutoplay(){
     clearInterval(autoplayTimer);
-    autoplayTimer = setInterval(()=>{
+    autoplayTimer=setInterval(()=>{
       if(!carousel.children.length) return;
-      const next = Math.min(carousel.scrollLeft + carousel.clientWidth*0.92, carousel.scrollWidth);
-      carousel.scrollTo({ left: next, behavior:'smooth' });
+      const next=Math.min(carousel.scrollLeft + carousel.clientWidth*0.92, carousel.scrollWidth);
+      carousel.scrollTo({left:next, behavior:'smooth'});
       if(carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 4){
-        setTimeout(()=>carousel.scrollTo({ left:0, behavior:'smooth' }), 1500);
+        setTimeout(()=>carousel.scrollTo({left:0, behavior:'smooth'}), 1500);
       }
     }, 3200);
   }
 
-  loadGallery();
+  // Inicio
+  loadGalleryJSONP();
 </script>
 </body>
 </html>
-
