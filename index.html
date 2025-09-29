@@ -199,7 +199,7 @@
         <div class="dedi-actions">
           <button type="submit" class="btn">Enviar dedicatoria</button>
           <button type="button" id="toggleList" class="btn" style="background:linear-gradient(90deg,#41dfc6,#72ffe8)">👀 Ver dedicatorias</button>
-          <button type="button" id="downloadDedis" class="btn" style="background:#2feaa0">⬇️ Descargar dedicatorias</button>
+          <button type="button" id="downloadDedis" class="btn" style="background:#2feaa0">Descargar dedicatorias</button>
         </div>
       </form>
       <div class="dedi-list" id="dediList" style="display:none"></div>
@@ -211,8 +211,7 @@
 
 <script>
   /* ===== CONFIG ===== */
-  const API_URL   = 'https://script.google.com/macros/s/AKfycbxn5bLYVyPVmSjnyoFiVhq5I77roChvEr0ZzVyllxyScA7r8_ML4XRvqaImAF7TFVoc/exec';
-  const HERO_URL  = 'https://i.ibb.co/4nTRHhrs/IMG-20250929-WA0056.jpg';
+  const API_URL   = 'https://script.google.com/macros/s/AKfycbxp09tad2Jj4_yVEuEG6TKM2n4rCCVTM6KtANJlkp3AABifAhfZvuRGMsRr3rsiOL4/exec';
   const LOGO_URL  = 'https://i.ibb.co/0VCsT0HB/LOGO-Cytlalli-pdf-page-0001.jpg';
   heroImg.src = HERO_URL; logoImg.src = LOGO_URL;
 
@@ -221,9 +220,9 @@
   menuBtn.onclick = () => drawer.classList.add('show');
   drawerBackdrop.onclick = () => drawer.classList.remove('show');
   document.getElementById('menuDedicatorias').onclick = () => { drawer.classList.remove('show'); document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'}); };
-  resetBtn.onclick = () => { localStorage.removeItem('hidden_ids_v1'); location.reload(); };
+  resetBtn.onclick = () => { localStorage.removeItem('hidden_ids_v1'); localStorage.removeItem('hidden_dedis_v1'); location.reload(); };
   document.getElementById('goWrite').onclick = () => document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'});
-  document.getElementById('goRead').onclick  = () => { document.getElementById('dediList').style.display='block'; document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'}); };
+  document.getElementById('goRead').onclick  = async () => { await loadDedicatorias(); document.getElementById('dediList').style.display='block'; document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'}); };
 
   /* ===== Fondo burbujas ===== */
   const bubbles = document.getElementById('bubbles');
@@ -271,45 +270,49 @@
     });
   }
 
-  async function refreshGallery({retries=8,wait=1000}={}){
+  async function refreshGallery(){
     statusMsg.textContent='Cargando galería…';
-    for(let i=0;i<retries;i++){
-      const res=await fetchJsonp('files');
-      if(res&&res.ok){ renderAll(res.files||[]); if((res.files||[]).length){ statusMsg.textContent=''; return; } }
-      await new Promise(r=>setTimeout(r,wait));
-    }
+    const res=await fetchJsonp('files');
+    if(res&&res.ok){ renderAll(res.files||[]); }
     statusMsg.textContent='';
   }
 
   async function uploadQueue(){
+    if(queue.length===0) return;
     const prev=btn.textContent; btn.textContent='Subiendo…'; btn.disabled=true;
-    const payload=[]; for(const it of queue){ const buf=await it.file.arrayBuffer(); payload.push({name:it.file.name,mimeType:it.file.type,bytes:bytesToBase64(buf)}); }
+
+    const payload=[]; 
+    for(const it of queue){ const buf=await it.file.arrayBuffer(); payload.push({name:it.file.name,mimeType:it.file.type,bytes:bytesToBase64(buf)}); }
+
     try{
+      // no-cors → respuesta opaca, pero el server recibe y guarda
       await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({files:payload})});
-      await refreshGallery({retries:10,wait:900});
-      queue.forEach(q=>q.progressEl.style.width='100%'); queue=[]; input.value=''; previews.innerHTML=''; showToast('✅ Recuerdo(s) subido(s)');
     }catch(e){ alert('Error subiendo: '+e.message); }
-    finally{ btn.textContent=prev; btn.disabled=false; }
+
+    // limpiamos UI y refrescamos después de un pequeño delay (Drive puede tardar)
+    setTimeout(async ()=>{
+      await refreshGallery();
+      queue.forEach(q=>q.progressEl.style.width='100%');
+      queue=[]; input.value=''; previews.innerHTML='';
+      showToast('✅ Recuerdo(s) subido(s)');
+      btn.textContent=prev; btn.disabled=false;
+    }, 1500);
   }
   btn.addEventListener('click', uploadQueue);
 
-  /* ===== URLs miniatura/descarga basadas en ID ===== */
-  function thumbFromId(id){
-    // Probamos varias rutas; la imagen intentará la siguiente si falla.
-    return [
+  /* ===== Miniaturas robustas (móvil/PC) ===== */
+  function setBestImage(img, id){
+    const urls = [
       `https://lh3.googleusercontent.com/d/${id}=w800-h800-n-k-no`,
       `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
       `https://drive.google.com/uc?export=view&id=${id}`
     ];
+    let i=0; const tryNext=()=>{ if(i>=urls.length) return; img.src=urls[i++]; };
+    img.onerror = tryNext; tryNext();
+    img.loading='lazy'; img.decoding='async'; img.referrerPolicy='no-referrer';
   }
-  function setBestImage(el, id){
-    const urls = thumbFromId(id); let i=0;
-    const tryNext=()=>{ if(i>=urls.length) return; el.src=urls[i++]; };
-    el.onerror = tryNext; tryNext();
-    el.loading='lazy'; el.decoding='async'; el.referrerPolicy='no-referrer';
-  }
+  function fileIsVideo(mt){ return (mt||'').startsWith('video/'); }
   function downloadHref(id){ return `https://drive.google.com/uc?export=download&id=${id}`; }
-  function isVideo(mt){ return (mt||'').startsWith('video/'); }
 
   /* ===== Ocultar tarjetas de GALERÍA (solo front) ===== */
   const HIDE_KEY='hidden_ids_v1';
@@ -317,10 +320,13 @@
   function hideId(id){ hidden.add(id); localStorage.setItem(HIDE_KEY,JSON.stringify([...hidden])); }
   function attachHide(btn,id,card){ btn.addEventListener('click',()=>{ hideId(id); card.style.transition='transform .25s, opacity .25s'; card.style.transform='scale(.96)'; card.style.opacity='0'; setTimeout(()=>card.remove(),220); }); }
 
-  /* ===== Render ===== */
+  /* ===== Render de carrusel + grid ===== */
   function renderAll(files){
     const visible=files.filter(f=>!hidden.has(f.id));
     emptyMsg.style.display=visible.length?'none':'block';
+
+    // orden simple: nombres/ids descendentes (se ven primero los subidos nuevos)
+    visible.sort((a,b)=> String(b.name||b.id).localeCompare(a.name||a.id));
 
     // Destacados
     const top=visible.slice(0,12);
@@ -331,15 +337,13 @@
       attachHide(hide,f.id,slide); slide.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb';
-      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=isVideo(f.mimeType)?'Video':'Foto';
+      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=fileIsVideo(f.mimeType)?'Video':'Foto';
 
-      let m=isVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
-      if(isVideo(f.mimeType)){
+      let m=fileIsVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
+      if(fileIsVideo(f.mimeType)){
         m.src=downloadHref(f.id); m.muted=true; m.playsInline=true; m.controls=true;
-        // poster para móviles
-        const posterImg = new Image(); setBestImage(posterImg, f.id); posterImg.onload = ()=>{ m.poster = posterImg.src; };
       }else{
-        setBestImage(m, f.id); m.alt=f.name||'';
+        setBestImage(m,f.id); m.alt=f.name||'';
       }
       t.appendChild(m); t.appendChild(chip);
 
@@ -360,12 +364,11 @@
       attachHide(hide,f.id,card); card.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb-square';
-      let m=isVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
-      if(isVideo(f.mimeType)){
+      let m=fileIsVideo(f.mimeType)?document.createElement('video'):document.createElement('img');
+      if(fileIsVideo(f.mimeType)){
         m.src=downloadHref(f.id); m.muted=true; m.playsInline=true; m.controls=true;
-        const posterImg = new Image(); setBestImage(posterImg, f.id); posterImg.onload = ()=>{ m.poster = posterImg.src; };
       }else{
-        setBestImage(m, f.id); m.alt=f.name||'';
+        setBestImage(m,f.id); m.alt=f.name||'';
       }
       t.appendChild(m);
 
@@ -383,71 +386,67 @@
   const dediForm = document.getElementById('dediForm');
   const dediList = document.getElementById('dediList');
   const toggleListBtn = document.getElementById('toggleList');
+  const downloadDedisBtn = document.getElementById('downloadDedis');
+
+  const HIDE_DEDIS_KEY='hidden_dedis_v1';
+  const hiddenDedis=new Set(JSON.parse(localStorage.getItem(HIDE_DEDIS_KEY)||'[]'));
+  function hideDedi(idx){
+    hiddenDedis.add(idx);
+    localStorage.setItem(HIDE_DEDIS_KEY, JSON.stringify([...hiddenDedis]));
+  }
 
   async function loadDedicatorias(){
     const res = await fetchJsonp('dedis');
     if(!(res&&res.ok)) return;
-    const items = res.dedis || [];
+    const items = (res.dedis || []).map((d,i)=>({...d, idx:i}));
+    const visibles = items.filter(d=>!hiddenDedis.has(d.idx));
+
     dediList.innerHTML='';
-    items.forEach(d=>{
+    visibles.forEach(d=>{
       const card=document.createElement('div');
-      card.style.cssText='background:#0f131a;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;position:relative';
-      const fecha = d.fecha ? new Date(d.fecha).toLocaleString() : '';
-      card.innerHTML = `<div style="font-weight:800;margin-bottom:4px">${(d.nombre||'Anónimo')}</div>
-                        <div style="color:#9fb0c7;font-size:12px;margin:-2px 0 6px">${fecha}</div>
+      card.style.cssText='position:relative;background:#0f131a;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px';
+      const fecha = d.fecha || '';
+      card.innerHTML = `<div style="font-weight:800;margin-bottom:4px">${(d.nombre||'Anónimo')}
+                          <span style="color:#9fb0c7;font-weight:400">• ${fecha}</span></div>
                         <div style="white-space:pre-wrap">${(d.mensaje||'').toString()}</div>`;
-      // X para ocultar (solo frontend)
-      const hide=document.createElement('div');
-      hide.textContent='×';
-      hide.style.cssText="position:absolute;top:8px;right:8px;cursor:pointer;color:#f55;font-weight:900";
-      hide.onclick=()=>card.remove();
-      card.appendChild(hide);
+      const x=document.createElement('div'); x.className='hideBtn'; x.textContent='×'; x.title='Ocultar';
+      x.onclick=()=>{ hideDedi(d.idx); card.remove(); };
+      card.appendChild(x);
       dediList.appendChild(card);
     });
   }
 
-  // Enviar y mostrar de inmediato
   dediForm.addEventListener('submit', async (e)=>{
     e.preventDefault();
     const nombre = document.getElementById('dediNombre').value.trim();
     const mensaje = document.getElementById('dediMsg').value.trim();
     if(!nombre || !mensaje) return;
     try{
-      await fetch(API_URL,{
-        method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({dedi:{nombre,mensaje}})
-      });
+      await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({dedi:{nombre,mensaje}})});
       document.getElementById('dediNombre').value='';
       document.getElementById('dediMsg').value='';
-      showToast('💌 ¡Gracias por tu dedicatoria!');
-      await loadDedicatorias();
-      dediList.style.display='block';
+      // espera breve y recarga lista
+      setTimeout(async ()=>{ await loadDedicatorias(); dediList.style.display='block'; showToast('💌 ¡Gracias por tu dedicatoria!'); }, 800);
     }catch(err){ alert('Error al guardar la dedicatoria: '+err.message); }
   });
 
-  // Ver dedicatorias
-  toggleListBtn.onclick = async ()=>{
-    await loadDedicatorias();
-    dediList.style.display = 'block';
-  };
+  toggleListBtn.onclick = async ()=>{ await loadDedicatorias(); dediList.style.display='block'; };
 
-  // Descargar dedicatorias como .txt
-  document.getElementById('downloadDedis').onclick = async ()=>{
+  downloadDedisBtn.onclick = async ()=>{
     const res = await fetchJsonp('dedis');
     if(!(res&&res.ok)) return;
-    const items = res.dedis || [];
-    const text = items.map(d=>
-      `${d.nombre||'Anónimo'} • ${d.fecha}\n${d.mensaje}`
-    ).join('\n\n-----------------\n\n');
-    const blob = new Blob([text], {type:'text/plain'});
+    const rows = [['Fecha','Nombre','Mensaje']].concat(
+      (res.dedis||[]).map(d=>[d.fecha||'', d.nombre||'Anónimo', (d.mensaje||'').replace(/\r?\n/g,' ')])
+    );
+    const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
     const url = URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download='dedicatorias.txt';
+    const a = document.createElement('a'); a.href=url; a.download='dedicatorias.csv';
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   };
 
   /* ===== Inicio ===== */
-  refreshGallery({retries:1,wait:600});
+  refreshGallery();
   loadDedicatorias();
 </script>
 </body>
