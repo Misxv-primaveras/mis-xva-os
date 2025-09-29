@@ -157,7 +157,7 @@
         <div class="avatar"></div>
         <h1 class="title">Mis XV – Memories</h1>
       </div>
-      <div style="width:82px"></div>
+      <button class="navbtn" id="resetBtn">↺ Restaurar ocultas</button>
     </div>
   </div>
 
@@ -398,9 +398,14 @@
   /* Inicio: 1 intento al abrir */
   refreshGallery({retries:1, wait:1200});
 
-  /* Menú (placeholder) */
+  /* Menú y Restaurar */
   document.getElementById('menuBtn').addEventListener('click', ()=>{
     showToast('Menú próximamente ✨');
+  });
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    localStorage.removeItem('hidden_ids_v1');
+    refreshGallery({retries:1, wait:400});
+    showToast('Fotos y videos restaurados');
   });
 </script>
 </body>
