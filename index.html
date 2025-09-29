@@ -5,76 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Mis XV – Memories</title>
 <style>
-  :root{
-    --bg:#0e0f12; --card:#14161c; --muted:#b7becb;
-    --copper1:#a66a54; --copper2:#d19a7d; --emerald:#22c3a6;
-    --glass:rgba(255,255,255,.06); --radius:18px;
-  }
+  :root{ --bg:#0e0f12; --card:#14161c; --muted:#b7becb; --copper1:#a66a54; --copper2:#d19a7d; --emerald:#22c3a6; --glass:rgba(255,255,255,.06); --radius:18px; }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0; color:#f7f9fc;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;
-    background: radial-gradient(1200px 600px at 50% -10%, #1b202a 0, var(--bg) 60%);
-    overflow-x:hidden;
-  }
+  body{ margin:0; color:#f7f9fc; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif; background: radial-gradient(1200px 600px at 50% -10%, #1b202a 0, var(--bg) 60%); overflow-x:hidden; }
 
   /* Fondo animado */
-  .bg-anim{
-    position:fixed; inset:0; z-index:-2;
-    background:
-      radial-gradient(1200px 600px at 20% -20%, #252b36 0, rgba(0,0,0,0) 60%),
-      radial-gradient(900px 500px at 80% -10%, #1f2430 0, rgba(0,0,0,0) 65%),
-      linear-gradient(180deg,#0b0c10, #0e0f12);
-    animation: hue 22s linear infinite;
-  }
+  .bg-anim{ position:fixed; inset:0; z-index:-2;
+    background: radial-gradient(1200px 600px at 20% -20%, #252b36 0, rgba(0,0,0,0) 60%), radial-gradient(900px 500px at 80% -10%, #1f2430 0, rgba(0,0,0,0) 65%), linear-gradient(180deg,#0b0c10, #0e0f12);
+    animation: hue 22s linear infinite; }
   @keyframes hue { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
   .bubbles{position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden}
   .bubble{position:absolute; width:12px; height:12px; border-radius:50%;
     background:radial-gradient(circle at 30% 30%, #72ffe8 0, #41dfc6 40%, transparent 70%);
     opacity:.12; animation: float 18s linear infinite; filter:blur(1px)}
-  @keyframes float{
-    from{ transform:translateY(110vh) translateX(0)}
-    to{ transform:translateY(-10vh) translateX(40px)}
-  }
+  @keyframes float{ from{ transform:translateY(110vh) translateX(0)} to{ transform:translateY(-10vh) translateX(40px)} }
 
   /* Header */
   header{ text-align:center; padding:26px 16px 6px }
-  .hero{
-    display:flex; gap:12px; align-items:center; justify-content:center; margin-bottom:6px;
-  }
-  .avatar{
-    width:54px; height:54px; border-radius:50%;
-    background:linear-gradient(135deg,var(--copper1),var(--copper2));
-    box-shadow:0 6px 18px rgba(209,154,125,.35); flex:0 0 auto;
-  }
+  .hero{ display:flex; gap:12px; align-items:center; justify-content:center; margin-bottom:6px; }
+  .avatar{ width:54px; height:54px; border-radius:50%; background:linear-gradient(135deg,var(--copper1),var(--copper2)); box-shadow:0 6px 18px rgba(209,154,125,.35); flex:0 0 auto; }
   header h1{ margin:6px 0 2px; font-size:clamp(22px,3.6vw,36px); letter-spacing:.2px }
   header p{ margin:0; color:var(--muted); font-size:14px }
   .container{ max-width:1100px; margin:0 auto; padding:12px 16px 44px }
 
   /* Uploader */
-  .uploader{
-    background:linear-gradient(180deg,#151821,#11141a);
-    border-radius:var(--radius);
-    padding:16px; display:grid; gap:12px;
-    box-shadow:0 24px 48px rgba(0,0,0,.35);
-    border:1px solid var(--glass);
-    animation: pop .6s ease;
-  }
+  .uploader{ background:linear-gradient(180deg,#151821,#11141a); border-radius:var(--radius); padding:16px; display:grid; gap:12px; box-shadow:0 24px 48px rgba(0,0,0,.35); border:1px solid var(--glass); animation: pop .6s ease; }
   @keyframes pop{ from{transform:scale(.98); opacity:0} to{transform:scale(1); opacity:1} }
   .row{ display:grid; gap:12px; grid-template-columns:1fr auto; align-items:center }
-  .dropzone{
-    border:2px dashed rgba(214,160,136,.5); border-radius:16px; padding:18px;
-    text-align:center; cursor:pointer; background:#131722; transition:.25s;
-  }
+  .dropzone{ border:2px dashed rgba(214,160,136,.5); border-radius:16px; padding:18px; text-align:center; cursor:pointer; background:#131722; transition:.25s; }
   .dropzone:hover{ border-color:var(--copper2); box-shadow:0 0 0 2px rgba(209,154,125,.25) inset; transform:translateY(-1px) }
   .help{ color:var(--muted); font-size:13px }
-  .btn{
-    background:linear-gradient(90deg,var(--copper1),var(--copper2));
-    color:#0d0f14; border:0; padding:12px 16px; border-radius:14px;
-    font-weight:800; cursor:pointer; letter-spacing:.2px;
-    box-shadow:0 10px 24px rgba(209,154,125,.35); transition:.2s;
-  }
+  .btn{ background:linear-gradient(90deg,var(--copper1),var(--copper2)); color:#0d0f14; border:0; padding:12px 16px; border-radius:14px; font-weight:800; cursor:pointer; letter-spacing:.2px; box-shadow:0 10px 24px rgba(209,154,125,.35); transition:.2s; }
   .btn:hover{ transform:translateY(-1px) }
   .btn:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none }
   .visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0 }
@@ -87,13 +49,8 @@
   .bar{ position:absolute; left:6px; right:6px; bottom:6px; height:6px; border-radius:6px; background:#222a39; overflow:hidden }
   .bar>span{ display:block; width:0%; height:100%; background:linear-gradient(90deg,var(--emerald),#6ff0d8); transition:width .2s }
 
-  /* Botón ocultar (X solo frontend) */
-  .hideBtn{
-    position:absolute; top:8px; left:8px; width:28px; height:28px; border-radius:999px;
-    display:grid; place-items:center; font-weight:900; cursor:pointer; user-select:none;
-    background:rgba(14,17,22,.65); border:1px solid rgba(255,255,255,.2); color:#fff;
-    backdrop-filter:blur(4px); line-height:0; transform:scale(.95); transition:.2s;
-  }
+  /* Ocultar (X) SOLO frontend */
+  .hideBtn{ position:absolute; top:8px; left:8px; width:28px; height:28px; border-radius:999px; display:grid; place-items:center; font-weight:900; cursor:pointer; user-select:none; background:rgba(14,17,22,.65); border:1px solid rgba(255,255,255,.2); color:#fff; backdrop-filter:blur(4px); line-height:0; transform:scale(.95); transition:.2s; }
   .hideBtn:hover{ background:rgba(255,80,80,.75); border-color:rgba(255,255,255,.35); transform:scale(1) }
 
   /* Carousel */
@@ -101,11 +58,7 @@
   .title{ margin:0 6px 10px; color:#e8eef8; font-size:16px }
   .carousel{ display:flex; gap:12px; overflow:auto; scroll-snap-type:x mandatory; padding-bottom:6px }
   .carousel::-webkit-scrollbar{ display:none }
-  .slide{
-    flex:0 0 78vw; max-width:440px; scroll-snap-align:center;
-    background:linear-gradient(180deg,#161a24,#11141a); border:1px solid var(--glass);
-    border-radius:16px; overflow:hidden; position:relative; animation: fadeIn .45s ease;
-  }
+  .slide{ flex:0 0 78vw; max-width:440px; scroll-snap-align:center; background:linear-gradient(180deg,#161a24,#11141a); border:1px solid var(--glass); border-radius:16px; overflow:hidden; position:relative; animation: fadeIn .45s ease; }
   .thumb{ aspect-ratio:16/9; background:#0b0e14; position:relative }
   .chip{ position:absolute; top:10px; left:46px; background:rgba(14,17,22,.6); border:1px solid rgba(255,255,255,.12); color:#fff; padding:4px 8px; font-size:11px; border-radius:999px; backdrop-filter:blur(4px)}
   .slide img,.slide video{ width:100%; height:100%; object-fit:cover; display:block }
@@ -116,20 +69,21 @@
 
   /* Grid */
   .gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px }
-  .card{
-    background:linear-gradient(180deg,#151a23,#10131a); border:1px solid var(--glass);
-    border-radius:16px; overflow:hidden; display:flex; flex-direction:column; position:relative; animation: fadeIn .45s ease;
-  }
+  .card{ background:linear-gradient(180deg,#151a23,#10131a); border:1px solid var(--glass); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; position:relative; animation: fadeIn .45s ease; }
   .thumb-square{ aspect-ratio:1/1; background:#0b0e14; position:relative }
   .thumb-square img,.thumb-square video{ width:100%; height:100%; object-fit:cover }
   .meta{ padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px }
+
+  /* Toast */
+  .toast{ position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-20px); background:rgba(20,24,31,.9); color:#e8f1ff; border:1px solid var(--glass); padding:10px 14px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:.3s; z-index:9 }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0) }
   @media (min-width:900px){ .slide{ flex-basis:380px } }
 </style>
 </head>
 <body>
-  <!-- Fondo animado -->
   <div class="bg-anim"></div>
   <div class="bubbles" id="bubbles"></div>
+  <div class="toast" id="toast">✅ Recuerdo subido</div>
 
   <header>
     <div class="hero">
@@ -166,17 +120,18 @@
   </main>
 
 <script>
-  // 1) Pega aquí la URL actual de tu Web App (/exec)
+  /* ====== CONFIG ====== */
   const API_URL = 'https://script.google.com/macros/s/AKfycbyo7N318WzCzyqacSrgIdXfTPcCMFjB9MNndk8mYsB0u7GKoD4iwb31oYu48znpRHM/exec';
 
-  // 2) Variables de UI
+  /* ====== UI VARS ====== */
   const input = document.getElementById('fileInput');
   const btn = document.getElementById('uploadBtn');
   const previews = document.getElementById('previews');
   const gallery = document.getElementById('gallery');
   const carousel = document.getElementById('carousel');
+  const toast = document.getElementById('toast');
 
-  // 3) Burbujeo de fondo
+  /* Fondo burbujas */
   const bubbles = document.getElementById('bubbles');
   for(let i=0;i<20;i++){
     const b=document.createElement('div'); b.className='bubble';
@@ -187,19 +142,17 @@
     bubbles.appendChild(b);
   }
 
-  // 4) Cola de subida
+  /* Cola de subida */
   let queue = [];
 
-  // 5) Ocultos (solo frontend): persiste IDs en localStorage
+  /* Ocultos locales (X solo frontend) */
   const HIDE_KEY = 'hidden_ids_v1';
   const hidden = new Set(JSON.parse(localStorage.getItem(HIDE_KEY)||'[]'));
-  function hideId(id){
-    hidden.add(id);
-    localStorage.setItem(HIDE_KEY, JSON.stringify([...hidden]));
-  }
+  function hideId(id){ hidden.add(id); localStorage.setItem(HIDE_KEY, JSON.stringify([...hidden])); }
 
-  // Utilidades
+  /* Utils */
   function bytesToBase64(arrBuf){ let b=''; const x=new Uint8Array(arrBuf); for(let i=0;i<x.byteLength;i++) b+=String.fromCharCode(x[i]); return btoa(b); }
+  function showToast(msg='✅ Recuerdo subido'){ toast.textContent=msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1800); }
 
   function addPreview(file){
     const wrap=document.createElement('div'); wrap.className='preview';
@@ -222,21 +175,35 @@
   document.addEventListener('dragover', e=>{ e.preventDefault(); });
   document.addEventListener('drop', e=>{ e.preventDefault(); onFilesSelected(e.dataTransfer.files); });
 
-  // Subir (no-cors) y refrescar
+  /* Subir y refrescar sin perder previews hasta pintar */
   async function uploadQueue(){
-    btn.disabled=true;
+    const prevText = btn.textContent;
+    btn.textContent = 'Subiendo…';
+    btn.disabled = true;
+
     const payloadFiles=[];
-    for(const item of queue){ const buf=await item.file.arrayBuffer(); payloadFiles.push({name:item.file.name,mimeType:item.file.type,bytes:bytesToBase64(buf)}); }
+    for(const item of queue){
+      const buf=await item.file.arrayBuffer();
+      payloadFiles.push({name:item.file.name,mimeType:item.file.type,bytes:bytesToBase64(buf)});
+    }
+
     try{
       await fetch(API_URL,{ method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({files:payloadFiles}) });
-      queue.forEach(q=>q.progressEl.style.width='100%'); queue=[]; input.value=''; setTimeout(()=>{previews.innerHTML='';},600);
-      setTimeout(loadGalleryJSONP, 900);
-    }catch(err){ alert('Error subiendo: '+err.message); }
-    finally{ btn.disabled=false; }
+      await new Promise(r=>setTimeout(r, 1500));     // da tiempo a Drive
+      await loadGalleryJSONPAsync();                 // recarga galería
+      queue.forEach(q=>q.progressEl.style.width='100%');
+      queue=[]; input.value=''; previews.innerHTML='';
+      showToast();
+    }catch(err){
+      alert('Error subiendo: '+err.message);
+    }finally{
+      btn.textContent = prevText;
+      btn.disabled = false;
+    }
   }
   btn.addEventListener('click', uploadQueue);
 
-  // URLs de media
+  /* URLs de media */
   function drivePreviewSrc(file){
     if(file.mimeType && file.mimeType.startsWith('image/')) return `https://drive.google.com/uc?export=view&id=${file.id}`;
     if(file.mimeType && file.mimeType.startsWith('video/')) return `https://drive.google.com/uc?export=download&id=${file.id}`;
@@ -244,7 +211,7 @@
   }
   function driveDownloadHref(file){ return `https://drive.google.com/uc?export=download&id=${file.id}`; }
 
-  // Ocultar tarjeta con animación (solo frontend)
+  /* X (ocultar sólo front) */
   function attachHide(btn, id, card){
     btn.addEventListener('click', ()=>{
       hideId(id);
@@ -255,18 +222,16 @@
     });
   }
 
+  /* Pintar UI */
   function renderAll(files){
-    // Filtra los ocultos
     const visible = files.filter(f=>!hidden.has(f.id));
 
     // Carrusel
-    const top=visible.slice(0,10);
-    const cfrag=document.createDocumentFragment();
+    const top=visible.slice(0,10); const cfrag=document.createDocumentFragment();
     top.forEach(f=>{
       const slide=document.createElement('div'); slide.className='slide';
       const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
-      attachHide(hide, f.id, slide);
-      slide.appendChild(hide);
+      attachHide(hide, f.id, slide); slide.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb';
       const chip=document.createElement('div'); chip.className='chip'; chip.textContent=(f.mimeType||'').startsWith('video/')?'Video':'Foto';
@@ -288,8 +253,7 @@
     visible.forEach(f=>{
       const card=document.createElement('div'); card.className='card';
       const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
-      attachHide(hide, f.id, card);
-      card.appendChild(hide);
+      attachHide(hide, f.id, card); card.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb-square';
       let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
@@ -307,16 +271,18 @@
     startAutoplay();
   }
 
-  // JSONP para cargar sin CORS
-  function loadGalleryJSONP(){
-    const cb='jsonp_'+Math.random().toString(36).slice(2);
-    window[cb]=(res)=>{ try{ if(res&&res.ok) renderAll(res.files||[]); } finally{ delete window[cb]; s.remove(); } };
-    const s=document.createElement('script');
-    s.src = API_URL + (API_URL.includes('?')?'&':'?') + 'callback=' + cb;
-    s.async = true; document.body.appendChild(s);
+  /* JSONP con Promise (para asegurar pintado) */
+  function loadGalleryJSONPAsync(){
+    return new Promise(resolve=>{
+      const cb='jsonp_'+Math.random().toString(36).slice(2);
+      window[cb]=(res)=>{ try{ console.log('JSONP:', res); if(res && res.ok) renderAll(res.files||[]); } finally{ delete window[cb]; s.remove(); resolve(); } };
+      const s=document.createElement('script');
+      s.src = API_URL + (API_URL.includes('?')?'&':'?') + 'callback=' + cb;
+      s.async = true; document.body.appendChild(s);
+    });
   }
 
-  // Autoplay carrusel
+  /* Autoplay carrusel */
   let autoplayTimer;
   function startAutoplay(){
     clearInterval(autoplayTimer);
@@ -330,8 +296,8 @@
     }, 3200);
   }
 
-  // Inicio
-  loadGalleryJSONP();
+  /* Inicio */
+  loadGalleryJSONPAsync();
 </script>
 </body>
 </html>
