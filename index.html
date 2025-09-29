@@ -174,7 +174,7 @@
         </label>
         <button class="btn" id="uploadBtn" disabled>Subir recuerdos a la nube</button>
       </div>
-      <input id="fileInput" class="visually-hidden" type="file" accept="image/*,video/*" multiple>
+      <input id="fileInput" class="visualmente-hidden visually-hidden" type="file" accept="image/*,video/*" multiple>
       <div class="previews" id="previews"></div>
       <div class="note" id="statusMsg"></div>
     </section>
@@ -203,7 +203,7 @@
         </div>
       </form>
       <div class="dedi-list" id="dediList" style="display:none"></div>
-      <div class="note">Las dedicatorias se guardan en este dispositivo.</div>
+      <div class="note">Las dedicatorias se guardan en la nube y se muestran abajo.</div>
     </section>
   </div>
 
@@ -260,19 +260,22 @@
   document.addEventListener('dragover', e=>e.preventDefault());
   document.addEventListener('drop', e=>{ e.preventDefault(); onFilesSelected(e.dataTransfer.files); });
 
-  function fetchJsonp(){
+  /* ===== JSONP (files & dedis) ===== */
+  function fetchJsonp(action='files'){
     return new Promise(resolve=>{
       const cb='jsonp_'+Math.random().toString(36).slice(2);
-      window[cb]=(res)=>{ try{ resolve(res||{ok:false,files:[]}); } finally{ delete window[cb]; s.remove(); } };
+      window[cb]=(res)=>{ try{ resolve(res||{ok:false}); } finally{ delete window[cb]; s.remove(); } };
       const s=document.createElement('script');
-      s.src=API_URL+(API_URL.includes('?')?'&':'?')+'callback='+cb; s.async=true; document.body.appendChild(s);
+      s.src=API_URL+(API_URL.includes('?')?'&':'?')+'action='+encodeURIComponent(action)+'&callback='+cb;
+      s.async=true; document.body.appendChild(s);
     });
   }
+
   async function refreshGallery({retries=10,wait=1200}={}){
     statusMsg.textContent='Cargando galería…';
     for(let i=0;i<retries;i++){
-      const res=await fetchJsonp();
-      if(res&&res.ok){ renderAll(res.files||[]); const visibles=(res.files||[]).length; if(visibles){ statusMsg.textContent=''; return; } }
+      const res=await fetchJsonp('files');
+      if(res&&res.ok){ renderAll(res.files||[]); if((res.files||[]).length){ statusMsg.textContent=''; return; } }
       await new Promise(r=>setTimeout(r,wait));
     }
     statusMsg.textContent='';
@@ -290,67 +293,63 @@
   }
   btn.addEventListener('click', uploadQueue);
 
-  /* ===== URLs de imágenes robustas con fallback ===== */
-  function urlCandidates(id){
-    return [
-      `https://lh3.googleusercontent.com/d/${id}=w600-h600-n-k-no`,           // 1) lh3 (rápido en móvil)
-      `https://drive.google.com/thumbnail?id=${id}&sz=w600`,                 // 2) thumbnail API
-      `https://drive.google.com/uc?export=view&id=${id}`,                    // 3) view
-      `https://drive.google.com/uc?export=download&id=${id}`                 // 4) download (último recurso)
-    ];
-  }
-  function setBestImage(img,id){
-    const urls=urlCandidates(id); let i=0;
-    const tryNext=()=>{ if(i>=urls.length) return; img.src=urls[i++]; };
-    img.onerror=tryNext; tryNext();
-    img.loading='lazy'; img.decoding='async'; img.referrerPolicy='no-referrer';
-  }
-  function driveDownloadHref(file){ return `https://drive.google.com/uc?export=download&id=${file.id}`; }
-
-  /* ===== Ocultar tarjetas (solo front) ===== */
+  /* ===== Render de imágenes/vídeos (usa las URLs del backend) ===== */
   const HIDE_KEY='hidden_ids_v1';
   const hidden=new Set(JSON.parse(localStorage.getItem(HIDE_KEY)||'[]'));
   function hideId(id){ hidden.add(id); localStorage.setItem(HIDE_KEY,JSON.stringify([...hidden])); }
   function attachHide(btn,id,card){ btn.addEventListener('click',()=>{ hideId(id); card.style.transition='transform .25s, opacity .25s'; card.style.transform='scale(.96)'; card.style.opacity='0'; setTimeout(()=>card.remove(),220); }); }
 
-  /* ===== Render ===== */
   function renderAll(files){
     const visible=files.filter(f=>!hidden.has(f.id));
     emptyMsg.style.display=visible.length?'none':'block';
 
     // Destacados
-    const top=visible.slice(0,12); const cfrag=document.createDocumentFragment();
+    const top=visible.slice(0,12);
+    const cfrag=document.createDocumentFragment();
     top.forEach(f=>{
       const slide=document.createElement('div'); slide.className='slide';
-      const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; attachHide(hide,f.id,slide); slide.appendChild(hide);
+      const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
+      attachHide(hide,f.id,slide); slide.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb';
-      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=(f.mimeType||'').startsWith('video/')?'Video':'Foto';
+      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=f.isVideo?'Video':'Foto';
 
-      let m=document.createElement('img'); setBestImage(m,f.id); m.alt=f.name||'';
+      let m=f.isVideo?document.createElement('video'):document.createElement('img');
+      if(f.isVideo){
+        m.src=f.downloadUrl; m.muted=true; m.playsInline=true; m.controls=true; m.poster=f.thumb;
+      }else{
+        m.src=f.thumb; m.loading='lazy'; m.decoding='async'; m.alt=f.name||'';
+      }
       t.appendChild(m); t.appendChild(chip);
 
       const meta=document.createElement('div'); meta.className='meta';
       const name=document.createElement('div'); name.className='name'; name.textContent=f.name||f.id;
-      const a=document.createElement('a'); a.className='dl'; a.href=driveDownloadHref(f); a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
+      const a=document.createElement('a'); a.className='dl'; a.href=f.downloadUrl; a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
       meta.appendChild(name); meta.appendChild(a);
 
       slide.appendChild(t); slide.appendChild(meta); cfrag.appendChild(slide);
     });
-    carousel.innerHTML=''; carousel.appendChild(cfrag); startAutoplay();
+    carousel.innerHTML=''; carousel.appendChild(cfrag);
 
-    // Galería
+    // Galería completa
     const gfrag=document.createDocumentFragment();
     visible.forEach(f=>{
       const card=document.createElement('div'); card.className='card';
-      const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; attachHide(hide,f.id,card); card.appendChild(hide);
+      const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
+      attachHide(hide,f.id,card); card.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb-square';
-      const m=document.createElement('img'); setBestImage(m,f.id); m.alt=f.name||''; t.appendChild(m);
+      let m=f.isVideo?document.createElement('video'):document.createElement('img');
+      if(f.isVideo){
+        m.src=f.downloadUrl; m.muted=true; m.playsInline=true; m.controls=true; m.poster=f.thumb;
+      }else{
+        m.src=f.thumb; m.loading='lazy'; m.decoding='async'; m.alt=f.name||'';
+      }
+      t.appendChild(m);
 
       const meta=document.createElement('div'); meta.className='meta';
       const name=document.createElement('div'); name.className='name'; name.textContent=f.name||f.id;
-      const a=document.createElement('a'); a.className='dl'; a.href=driveDownloadHref(f); a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
+      const a=document.createElement('a'); a.className='dl'; a.href=f.downloadUrl; a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
       meta.appendChild(name); meta.appendChild(a);
 
       card.appendChild(t); card.appendChild(meta); gfrag.appendChild(card);
@@ -358,59 +357,64 @@
     gallery.innerHTML=''; gallery.appendChild(gfrag);
   }
 
-  /* ===== Autoplay carrusel ===== */
-  let autoplayTimer;
-  function startAutoplay(){
-    clearInterval(autoplayTimer);
-    autoplayTimer=setInterval(()=>{
-      if(!carousel.children.length) return;
-      const next=Math.min(carousel.scrollLeft + carousel.clientWidth*0.92, carousel.scrollWidth);
-      carousel.scrollTo({left:next, behavior:'smooth'});
-      if(carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 4){
-        setTimeout(()=>carousel.scrollTo({left:0, behavior:'smooth'}), 1200);
-      }
-    }, 3000);
-  }
+  /* ===== Dedicatorias (usa tu Apps Script) ===== */
+  const dediForm = document.getElementById('dediForm');
+  const dediList = document.getElementById('dediList');
+  const toggleListBtn = document.getElementById('toggleList');
+  const exportBtn = document.getElementById('exportTXT');
 
-  /* ===== Dedicatorias (localStorage + TXT) ===== */
-  const dediForm=document.getElementById('dediForm');
-  const dediList=document.getElementById('dediList');
-  const toggleList=document.getElementById('toggleList');
-  let dedis=JSON.parse(localStorage.getItem('dedicatorias')||'[]');
-
-  function repaintDedis(){
+  async function loadDedicatorias(){
+    const res = await fetchJsonp('dedis');
+    if(!(res&&res.ok)) return;
+    const items = res.dedis || [];
+    // pinta
     dediList.innerHTML='';
-    if(!dedis.length){ const p=document.createElement('div'); p.style.opacity='.75'; p.textContent='Aún no hay dedicatorias.'; dediList.appendChild(p); return; }
-    dedis.forEach(d=>{
-      const item=document.createElement('div');
-      item.style.background='#0f131a'; item.style.border='1px solid rgba(255,255,255,.08)';
-      item.style.borderRadius='12px'; item.style.padding='10px';
-      item.innerHTML=`<strong>${d.nombre}</strong> <span style="opacity:.7;font-size:12px">(${d.fecha})</span><br>${d.mensaje}`;
-      dediList.appendChild(item);
+    items.forEach(d=>{
+      const card=document.createElement('div');
+      card.style.cssText='background:#0f131a;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px';
+      const fecha = d.fecha ? new Date(d.fecha).toLocaleString() : '';
+      card.innerHTML = `<div style="font-weight:800;margin-bottom:4px">${d.nombre||'Anónimo'} <span style="color:#9fb0c7;font-weight:400">• ${fecha}</span></div>
+                        <div style="white-space:pre-wrap">${(d.mensaje||'').toString()}</div>`;
+      dediList.appendChild(card);
     });
   }
-  repaintDedis();
 
-  toggleList.onclick=()=>{ const show=dediList.style.display!=='block'; dediList.style.display=show?'block':'none'; if(show) repaintDedis(); };
-  dediForm.addEventListener('submit', (e)=>{
+  dediForm.addEventListener('submit', async (e)=>{
     e.preventDefault();
-    const nombre=document.getElementById('dediNombre').value.trim();
-    const mensaje=document.getElementById('dediMsg').value.trim();
-    if(!nombre||!mensaje) return;
-    const nuevo={nombre,mensaje,fecha:new Date().toLocaleString()};
-    dedis.push(nuevo); localStorage.setItem('dedicatorias', JSON.stringify(dedis));
-    dediForm.reset(); dediList.style.display='block'; repaintDedis(); showToast('💌 Dedicatoria guardada');
+    const nombre = document.getElementById('dediNombre').value.trim();
+    const mensaje = document.getElementById('dediMsg').value.trim();
+    if(!nombre || !mensaje) return;
+    try{
+      await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({dedi:{nombre,mensaje}})});
+      document.getElementById('dediNombre').value='';
+      document.getElementById('dediMsg').value='';
+      showToast('💌 ¡Gracias por tu dedicatoria!');
+      await loadDedicatorias();
+      dediList.style.display='block';
+    }catch(err){ alert('Error al guardar la dedicatoria: '+err.message); }
   });
 
-  document.getElementById('exportTXT').onclick=()=>{
-    let txt='DEDICATORIAS – CYTLALLI\n\n';
-    dedis.forEach(d=>{ txt+=`— ${d.nombre} (${d.fecha})\n${d.mensaje}\n\n`; });
-    const blob=new Blob([txt],{type:'text/plain;charset=utf-8;'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='dedicatorias.txt'; a.click();
+  toggleListBtn.onclick = async ()=>{
+    await loadDedicatorias();
+    dediList.style.display = 'block';
+  };
+
+  exportBtn.onclick = async ()=>{
+    await loadDedicatorias();
+    const cards = Array.from(dediList.children);
+    const text = cards.map(c=>c.innerText).join('\n\n-------------------------\n\n');
+    const blob = new Blob([text], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'dedicatorias.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
   };
 
   /* ===== Inicio ===== */
-  refreshGallery({retries:1, wait:1000});
+  refreshGallery({retries:1,wait:800});
+  loadDedicatorias();
 </script>
 </body>
 </html>
+
