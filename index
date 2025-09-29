@@ -6,10 +6,10 @@
   <title>Tu evento – Galería de recuerdos</title>
   <style>
     :root {
-      --bg: #0f1115;      /* fondo oscuro elegante */
-      --card: #171a21;    /* tarjetas */
-      --muted: #aab2c0;   /* textos secundarios */
-      --accent: #9dd7ff;  /* acento suave */
+      --bg: #0f1115;
+      --card: #171a21;
+      --muted: #aab2c0;
+      --accent: #9dd7ff;
       --radius: 16px;
     }
     * { box-sizing: border-box; }
@@ -66,7 +66,7 @@
         <div class="dropzone" id="dropzone">
           <input id="fileInput" type="file" accept="image/*,video/*" multiple hidden>
           <div><strong>Toca o arrastra archivos aquí</strong></div>
-          <div class="help">Formato: JPG, PNG, HEIC*, MP4, MOV, etc. (*iPhone convierte a JPG/PNG al subir)</div>
+          <div class="help">Formato: JPG, PNG, HEIC*, MP4, MOV, etc.</div>
         </div>
         <button class="btn" id="uploadBtn" disabled>Subir archivos</button>
       </div>
@@ -80,6 +80,8 @@
   </main>
 
   <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyYTLXKAfpg5pN8N5UDhxL-PJP94OdKSbRRTtpWRL3KkQ4fjMgTOflZCJ6hP_q143Yu/exec';
+
     const drop = document.getElementById('dropzone');
     const input = document.getElementById('fileInput');
     const btn = document.getElementById('uploadBtn');
@@ -113,12 +115,12 @@
       const span = document.createElement('span'); bar.appendChild(span);
       wrap.appendChild(media); wrap.appendChild(bar);
       previews.appendChild(wrap);
-      return span; // devolvemos la barrita de progreso
+      return span;
     }
 
     function onFilesSelected(list){
       Array.from(list).forEach(f => {
-        if (!/^image\/.+|^video\/.+/.test(f.type)) return;
+        if (!/^image\\/.+|^video\\/.+/.test(f.type)) return;
         const progressEl = addPreview(f);
         queue.push({ file: f, progressEl });
       });
@@ -127,65 +129,54 @@
 
     drop.addEventListener('click', () => input.click());
     input.addEventListener('change', e => onFilesSelected(e.target.files));
-
     drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
     drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
-    drop.addEventListener('drop', e => {
-      e.preventDefault(); drop.classList.remove('dragover');
-      onFilesSelected(e.dataTransfer.files);
-    });
+    drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('dragover'); onFilesSelected(e.dataTransfer.files); });
 
     async function uploadQueue(){
       btn.disabled = true;
-      const payload = { files: [] };
+      const payloadFiles = [];
       for (const item of queue){
         const buf = await item.file.arrayBuffer();
-        payload.files.push({ name: item.file.name, mimeType: item.file.type, bytes: bytesToBase64(buf) });
+        payloadFiles.push({ name: item.file.name, mimeType: item.file.type, bytes: bytesToBase64(buf) });
       }
-      // Llamada al servidor (Apps Script)
-      google.script.run.withSuccessHandler(res => {
-        // animar barras y limpiar
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ files: payloadFiles })
+        }).then(r => r.json());
         queue.forEach(q => q.progressEl.style.width = '100%');
-        queue = []; input.value = ''; setTimeout(() => { previews.innerHTML = ''; }, 600);
-        if (res && res.ok) renderGallery(res.files, true);
-      }).withFailureHandler(err => {
-        alert('Error subiendo archivos: ' + err.message);
-        btn.disabled = false;
-      }).uploadFiles(payload);
+        queue = []; input.value=''; setTimeout(()=>{previews.innerHTML='';},600);
+        if(res && res.ok){ renderGallery(res.files, true); }
+      } catch(err){ alert('Error subiendo: ' + err.message); btn.disabled=false; }
     }
 
     btn.addEventListener('click', uploadQueue);
 
     function drivePreviewSrc(file){
       if (file.mimeType.startsWith('image/')) {
-        // Vista rápida
         return `https://drive.google.com/uc?export=view&id=${file.id}`;
       } else if (file.mimeType.startsWith('video/')) {
-        // Descarga/stream
         return `https://drive.google.com/uc?export=download&id=${file.id}`;
       } else {
-        return file.thumbnailLink || `https://drive.google.com/uc?export=view&id=${file.id}`;
+        return `https://drive.google.com/uc?export=view&id=${file.id}`;
       }
     }
-
     function driveDownloadHref(file){
-      // Enlace de descarga directa
       return `https://drive.google.com/uc?export=download&id=${file.id}`;
     }
 
     function renderGallery(files, prepend=false){
       const frag = document.createDocumentFragment();
       files.forEach(f => {
-        const card = document.createElement('div');
-        card.className = 'card';
+        const card = document.createElement('div'); card.className = 'card';
         const thumb = document.createElement('div'); thumb.className = 'thumb';
         let media;
         if (f.mimeType.startsWith('video/')) {
-          media = document.createElement('video');
-          media.src = drivePreviewSrc(f); media.muted = true; media.playsInline = true; media.controls = true;
+          media = document.createElement('video'); media.src = drivePreviewSrc(f); media.muted=true; media.playsInline=true; media.controls=true;
         } else {
-          media = document.createElement('img');
-          media.src = drivePreviewSrc(f); media.alt = f.name;
+          media = document.createElement('img'); media.src = drivePreviewSrc(f); media.alt = f.name;
         }
         thumb.appendChild(media);
         const meta = document.createElement('div'); meta.className = 'meta';
@@ -195,22 +186,16 @@
         card.appendChild(thumb); card.appendChild(meta);
         frag.appendChild(card);
       });
-      if (prepend) {
-        gallery.prepend(frag);
-      } else {
-        gallery.innerHTML = ''; gallery.appendChild(frag);
-      }
+      if (prepend) { gallery.prepend(frag); }
+      else { gallery.innerHTML = ''; gallery.appendChild(frag); }
     }
 
-    function loadGallery(){
-      google.script.run.withSuccessHandler(res => {
+    async function loadGallery(){
+      try {
+        const res = await fetch(API_URL).then(r=>r.json());
         if (res && res.ok) renderGallery(res.files);
-      }).withFailureHandler(err => {
-        console.error(err);
-      }).listFiles();
+      } catch(e){ console.error(e); }
     }
-
-    // Cargar la galería al abrir
     loadGallery();
   </script>
 </body>
