@@ -17,8 +17,7 @@
     --copper1:#a66a54; --copper2:#d19a7d; --emerald:#22c3a6;
     --glass:rgba(255,255,255,.06); --radius:18px;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  *{box-sizing:border-box} html,body{height:100%}
   body{
     margin:0; color:#f7f9fc;
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;
@@ -26,17 +25,26 @@
     overflow-x:hidden;
   }
 
-  /* ===== AppBar (estilo app móvil) ===== */
+  /* ===== AppBar ===== */
   .appbar{
     position:sticky; top:0; z-index:50;
     backdrop-filter:saturate(120%) blur(8px);
     background:linear-gradient(180deg,rgba(10,12,16,.75),rgba(10,12,16,.45));
     border-bottom:1px solid rgba(255,255,255,.06);
-    padding: env(safe-area-inset-top) 12px 10px 12px;
+    padding: env(safe-area-inset-top) 10px 10px 12px;
   }
   .appbar .row{
     display:flex; align-items:center; gap:10px; max-width:1100px; margin:0 auto;
   }
+  .brand{
+    display:flex; align-items:center; gap:10px; margin:0 auto; text-align:center;
+  }
+  .logo{
+    width:32px; height:32px; border-radius:10px; overflow:hidden; flex:0 0 auto;
+    box-shadow:0 6px 18px rgba(209,154,125,.35); background:#1a1f2a;
+  }
+  .logo img{width:100%; height:100%; object-fit:cover; display:block}
+  .title{ margin:0; font-size:18px; font-weight:800 }
   .navbtn{
     display:inline-flex; align-items:center; gap:8px;
     background:rgba(255,255,255,.08);
@@ -46,21 +54,10 @@
     transition:.2s; backdrop-filter:blur(6px);
   }
   .navbtn:hover{ transform:translateY(-1px); background:rgba(255,255,255,.12) }
-  .brand{
-    display:flex; align-items:center; gap:12px; margin:0 auto; text-align:center;
-  }
-  .avatar{
-    width:34px; height:34px; border-radius:50%;
-    background:linear-gradient(135deg,var(--copper1),var(--copper2));
-    box-shadow:0 6px 18px rgba(209,154,125,.35); flex:0 0 auto;
-  }
-  .title{ margin:0; font-size:18px; font-weight:800 }
 
-  /* “Marco de app” en desktop (centrado) */
+  /* Frame */
   .app-frame{ max-width:1100px; margin:0 auto; padding:16px; }
-  @media (min-width:1000px){
-    .app-frame{ max-width:900px }
-  }
+  @media (min-width:1000px){ .app-frame{ max-width:900px } }
 
   /* Fondo animado */
   .bg-anim{
@@ -78,9 +75,33 @@
     opacity:.12; animation: float 18s linear infinite; filter:blur(1px)}
   @keyframes float{ from{ transform:translateY(110vh) translateX(0)} to{ transform:translateY(-10vh) translateX(40px)} }
 
-  /* Header descriptivo */
-  .hero{ display:flex; gap:12px; align-items:center; justify-content:center; margin:16px 0 6px; text-align:center }
-  .hero p{ margin:0; color:#b8c3d6; font-size:14px }
+  /* ===== HERO tipo “app” ===== */
+  .hero-card{
+    position:relative; overflow:hidden; border-radius:28px;
+    background:#11151c; border:1px solid var(--glass);
+    box-shadow:0 24px 48px rgba(0,0,0,.35); margin-bottom:16px;
+  }
+  .hero-img{
+    width:100%; aspect-ratio:9/10; object-fit:cover; display:block; filter:saturate(.98);
+  }
+  .hero-overlay{
+    position:absolute; inset:0;
+    background:linear-gradient(180deg,rgba(0,0,0,.15) 20%, rgba(0,0,0,.55) 70%, rgba(0,0,0,.8) 100%);
+  }
+  .hero-meta{
+    position:absolute; left:0; right:0; bottom:0; padding:16px;
+    display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
+  }
+  .hero-title{ font-size:22px; font-weight:900; letter-spacing:.2px }
+  .hero-sub{ color:#ccd6e7; font-size:13px }
+  .hero-actions{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:10px; width:100%;
+  }
+  .action{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    color:#ecf2ff; padding:10px 6px; border-radius:14px; text-align:center;
+    font-weight:700; font-size:12px; backdrop-filter:blur(6px);
+  }
 
   /* Uploader */
   .uploader{
@@ -145,7 +166,6 @@
 </style>
 </head>
 <body>
-  <!-- Fondo animado -->
   <div class="bg-anim"></div>
   <div class="bubbles" id="bubbles"></div>
 
@@ -154,7 +174,7 @@
     <div class="row">
       <button class="navbtn" id="menuBtn">☰ Menú</button>
       <div class="brand">
-        <div class="avatar"></div>
+        <div class="logo"><img id="logoImg" alt="Logo"></div>
         <h1 class="title">Mis XV – Memories</h1>
       </div>
       <button class="navbtn" id="resetBtn">↺ Restaurar ocultas</button>
@@ -162,10 +182,23 @@
   </div>
 
   <div class="app-frame">
-    <div class="hero">
-      <p>Sube tus fotos y videos. Se verán aquí mismo y podrás descargarlos.</p>
-    </div>
+    <!-- HERO estilo app -->
+    <section class="hero-card">
+      <img id="heroImg" class="hero-img" alt="Quinceañera">
+      <div class="hero-overlay"></div>
+      <div class="hero-meta">
+        <div class="hero-title" id="heroName">Val Ruiz 💕</div>
+        <div class="hero-sub" id="heroDate">22 de julio 2023, 6:30 pm</div>
+        <div class="hero-actions">
+          <div class="action">➕ Subir</div>
+          <div class="action">💬 Chat</div>
+          <div class="action">🗒️ Planning</div>
+          <div class="action">👥 22</div>
+        </div>
+      </div>
+    </section>
 
+    <!-- Uploader -->
     <section class="uploader">
       <div class="row-grid">
         <label class="dropzone" for="fileInput">
@@ -194,8 +227,13 @@
   <div class="toast" id="toast">✅ Recuerdo subido</div>
 
 <script>
-  /* ===== CONFIG (tu URL /exec) ===== */
+  /* ===== CONFIG ===== */
   const API_URL = 'https://script.google.com/macros/s/AKfycbzxJfmxw2gHBbyKexCtX_jC5N9kxG7EWs3UC38Kq-cHR_uwzmF2VJ5X8FcJSzA9bZpw/exec';
+  const HERO_URL = 'https://www.photo-pick.com/online/c8VwKurU.link';
+  const LOGO_URL = 'https://www.photo-pick.com/online/IIvvWsiz.link';
+
+  document.getElementById('heroImg').src = HERO_URL;
+  document.getElementById('logoImg').src = LOGO_URL;
 
   /* ===== UI VARS ===== */
   const input = document.getElementById('fileInput');
@@ -207,7 +245,7 @@
   const statusMsg = document.getElementById('statusMsg');
   const emptyMsg = document.getElementById('emptyMsg');
 
-  // Burbujeo de fondo
+  // Fondo burbujeo
   const bubbles = document.getElementById('bubbles');
   for(let i=0;i<20;i++){
     const b=document.createElement('div'); b.className='bubble';
@@ -221,7 +259,7 @@
   // Cola de subida
   let queue = [];
 
-  // Ocultos locales (X solo frontend)
+  // Ocultos (solo frontend)
   const HIDE_KEY = 'hidden_ids_v1';
   const hidden = new Set(JSON.parse(localStorage.getItem(HIDE_KEY)||'[]'));
   function hideId(id){ hidden.add(id); localStorage.setItem(HIDE_KEY, JSON.stringify([...hidden])); }
@@ -239,7 +277,6 @@
     const bar=document.createElement('div'); bar.className='bar'; const span=document.createElement('span'); bar.appendChild(span);
     wrap.appendChild(media); wrap.appendChild(bar); previews.appendChild(wrap); return span;
   }
-
   function onFilesSelected(list){
     Array.from(list).forEach(f=>{
       if(!/^(image|video)\//.test(f.type)) return;
@@ -252,19 +289,17 @@
   document.addEventListener('dragover', e=>{ e.preventDefault(); });
   document.addEventListener('drop', e=>{ e.preventDefault(); onFilesSelected(e.dataTransfer.files); });
 
-  /* ===== JSONP + REINTENTOS ===== */
+  /* ===== JSONP ===== */
   function fetchJsonp(){
     return new Promise(resolve=>{
       const cb = 'jsonp_'+Math.random().toString(36).slice(2);
-      window[cb] = (res)=>{ try{ console.log('JSONP:', res); resolve(res||{ok:false,files:[]}); }
-                            finally{ delete window[cb]; s.remove(); } };
+      window[cb] = (res)=>{ try{ resolve(res||{ok:false,files:[]}); } finally{ delete window[cb]; s.remove(); } };
       const s = document.createElement('script');
       s.src = API_URL + (API_URL.includes('?')?'&':'?') + 'callback=' + cb;
       s.async = true;
       document.body.appendChild(s);
     });
   }
-
   async function refreshGallery({retries=12, wait=1500} = {}){
     statusMsg.textContent = 'Cargando galería…';
     for(let i=0;i<retries;i++){
@@ -279,7 +314,7 @@
     statusMsg.textContent = '';
   }
 
-  /* Subida con reintentos hasta que aparezcan */
+  /* Subir y refrescar */
   async function uploadQueue(){
     const prevText = btn.textContent;
     btn.textContent = 'Subiendo…';
@@ -335,7 +370,7 @@
     const visible = files.filter(f=>!hidden.has(f.id));
     emptyMsg.style.display = visible.length ? 'none' : 'block';
 
-    // Carrusel
+    // Carrusel (Destacados)
     const top=visible.slice(0,12);
     const cfrag=document.createDocumentFragment();
     top.forEach(f=>{
@@ -346,7 +381,8 @@
       const t=document.createElement('div'); t.className='thumb';
       const chip=document.createElement('div'); chip.className='chip'; chip.textContent=(f.mimeType||'').startsWith('video/')?'Video':'Foto';
       let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
-      m.src=drivePreviewSrc(f); if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; } else m.alt=f.name||'';
+      m.src=drivePreviewSrc(f); m.loading='lazy';
+      if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; } else m.alt=f.name||'';
       t.appendChild(m); t.appendChild(chip);
 
       const meta=document.createElement('div'); meta.className='meta';
@@ -359,7 +395,7 @@
     carousel.innerHTML=''; carousel.appendChild(cfrag);
     startAutoplay();
 
-    // Grid
+    // Grid (Galería completa)
     const gfrag=document.createDocumentFragment();
     visible.forEach(f=>{
       const card=document.createElement('div'); card.className='card';
@@ -368,7 +404,8 @@
 
       const t=document.createElement('div'); t.className='thumb-square';
       let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
-      m.src=drivePreviewSrc(f); if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; } else m.alt=f.name||'';
+      m.src=drivePreviewSrc(f); m.loading='lazy';
+      if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; } else m.alt=f.name||'';
       t.appendChild(m);
 
       const meta=document.createElement('div'); meta.className='meta';
@@ -395,13 +432,11 @@
     }, 3200);
   }
 
-  /* Inicio: 1 intento al abrir */
+  /* Inicio */
   refreshGallery({retries:1, wait:1200});
 
   /* Menú y Restaurar */
-  document.getElementById('menuBtn').addEventListener('click', ()=>{
-    showToast('Menú próximamente ✨');
-  });
+  document.getElementById('menuBtn').addEventListener('click', ()=>showToast('Menú próximamente ✨'));
   document.getElementById('resetBtn').addEventListener('click', ()=>{
     localStorage.removeItem('hidden_ids_v1');
     refreshGallery({retries:1, wait:400});
