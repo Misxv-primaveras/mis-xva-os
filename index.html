@@ -137,9 +137,21 @@
   .bar{ position:absolute; left:6px; right:6px; bottom:6px; height:6px; border-radius:6px; background:#222a39; overflow:hidden }
   .bar>span{ display:block; width:0%; height:100%; background:linear-gradient(90deg,var(--emerald),#6ff0d8); transition:width .2s }
 
-  /* Ocultar (X) SOLO frontend */
-  .hideBtn{ position:absolute; top:8px; left:8px; width:28px; height:28px; border-radius:999px; display:grid; place-items:center; font-weight:900; cursor:pointer; user-select:none; background:rgba(14,17,22,.65); border:1px solid rgba(255,255,255,.2); color:#fff; backdrop-filter:blur(4px); line-height:0; transform:scale(.95); transition:.2s; }
+  /* Ocultar (X) SOLO frontend - capa arriba */
+  .hideBtn{
+    position:absolute; top:8px; left:8px; width:28px; height:28px; border-radius:999px;
+    display:grid; place-items:center; font-weight:900; cursor:pointer; user-select:none;
+    background:rgba(14,17,22,.65); border:1px solid rgba(255,255,255,.2); color:#fff;
+    backdrop-filter:blur(4px); line-height:0; transform:scale(.95); transition:.2s;
+    z-index:5;
+  }
   .hideBtn:hover{ background:rgba(255,80,80,.75); border-color:rgba(255,255,255,.35); transform:scale(1) }
+
+  /* Asegura capas para que la X quede arriba */
+  .thumb, .thumb-square { position:relative; }
+  .thumb img, .thumb video, .thumb-square img, .thumb-square video{
+    position:relative; z-index:1;
+  }
 
   /* Carousel + grid */
   .section-title{ margin:14px 6px 10px; color:#e8eef8; font-size:16px }
@@ -229,8 +241,8 @@
 <script>
   /* ===== CONFIG ===== */
   const API_URL = 'https://script.google.com/macros/s/AKfycbzxJfmxw2gHBbyKexCtX_jC5N9kxG7EWs3UC38Kq-cHR_uwzmF2VJ5X8FcJSzA9bZpw/exec';
-  const HERO_URL = 'https://www.photo-pick.com/online/c8VwKurU.link';
-  const LOGO_URL = 'https://www.photo-pick.com/online/IIvvWsiz.link';
+  const HERO_URL = 'https://ibb.co/ks82tNC3';
+  const LOGO_URL = 'https://ibb.co/CsbPgjRJ';
 
   document.getElementById('heroImg').src = HERO_URL;
   document.getElementById('logoImg').src = LOGO_URL;
@@ -346,13 +358,22 @@
   }
   btn.addEventListener('click', uploadQueue);
 
-  /* URLs de media */
+  /* ===== URLs de media con miniaturas fiables ===== */
+  function driveThumb(file){
+    return `https://drive.google.com/thumbnail?id=${file.id}&sz=w320`;
+  }
   function drivePreviewSrc(file){
-    if(file.mimeType && file.mimeType.startsWith('image/')) return `https://drive.google.com/uc?export=view&id=${file.id}`;
-    if(file.mimeType && file.mimeType.startsWith('video/')) return `https://drive.google.com/uc?export=download&id=${file.id}`;
+    if(file.mimeType && file.mimeType.startsWith('image/')) {
+      return driveThumb(file);                   // miniatura rápida
+    }
+    if(file.mimeType && file.mimeType.startsWith('video/')) {
+      return `https://drive.google.com/uc?export=download&id=${file.id}`; // stream/descarga
+    }
     return `https://drive.google.com/uc?export=view&id=${file.id}`;
   }
-  function driveDownloadHref(file){ return `https://drive.google.com/uc?export=download&id=${file.id}`; }
+  function driveDownloadHref(file){
+    return `https://drive.google.com/uc?export=download&id=${file.id}`;
+  }
 
   /* X (ocultar sólo front) */
   function attachHide(btn, id, card){
@@ -381,8 +402,17 @@
       const t=document.createElement('div'); t.className='thumb';
       const chip=document.createElement('div'); chip.className='chip'; chip.textContent=(f.mimeType||'').startsWith('video/')?'Video':'Foto';
       let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
-      m.src=drivePreviewSrc(f); m.loading='lazy';
-      if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; } else m.alt=f.name||'';
+
+      m.src=drivePreviewSrc(f);
+      m.loading='lazy';
+      m.onerror = () => { if(m.tagName==='IMG'){ m.src=`https://drive.google.com/uc?export=view&id=${f.id}`; } };
+      if(m.tagName==='VIDEO'){
+        m.muted=true; m.playsInline=true; m.controls=true;
+        m.poster = driveThumb(f);
+      } else {
+        m.alt=f.name||'';
+      }
+
       t.appendChild(m); t.appendChild(chip);
 
       const meta=document.createElement('div'); meta.className='meta';
@@ -404,8 +434,17 @@
 
       const t=document.createElement('div'); t.className='thumb-square';
       let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
-      m.src=drivePreviewSrc(f); m.loading='lazy';
-      if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; } else m.alt=f.name||'';
+
+      m.src=drivePreviewSrc(f);
+      m.loading='lazy';
+      m.onerror = () => { if(m.tagName==='IMG'){ m.src=`https://drive.google.com/uc?export=view&id=${f.id}`; } };
+      if(m.tagName==='VIDEO'){
+        m.muted=true; m.playsInline=true; m.controls=true;
+        m.poster = driveThumb(f);
+      } else {
+        m.alt=f.name||'';
+      }
+
       t.appendChild(m);
 
       const meta=document.createElement('div'); meta.className='meta';
@@ -432,15 +471,14 @@
     }, 3200);
   }
 
-  /* Inicio */
+  /* Inicio y acciones */
   refreshGallery({retries:1, wait:1200});
-
-  /* Menú y Restaurar */
-  document.getElementById('menuBtn').addEventListener('click', ()=>showToast('Menú próximamente ✨'));
+  document.getElementById('menuBtn').addEventListener('click', ()=>{ showToast('Menú próximamente ✨'); });
   document.getElementById('resetBtn').addEventListener('click', ()=>{
     localStorage.removeItem('hidden_ids_v1');
-    refreshGallery({retries:1, wait:400});
-    showToast('Fotos y videos restaurados');
+    hidden.clear();
+    refreshGallery({retries:2, wait:800});
+    showToast('Se restauraron las tarjetas ocultas');
   });
 </script>
 </body>
