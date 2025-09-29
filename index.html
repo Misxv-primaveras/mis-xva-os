@@ -17,7 +17,8 @@
     --copper1:#a66a54; --copper2:#d19a7d; --emerald:#22c3a6;
     --glass:rgba(255,255,255,.06); --radius:18px;
   }
-  *{box-sizing:border-box} html,body{height:100%}
+  *{box-sizing:border-box}
+  html,body{height:100%}
   body{
     margin:0; color:#f7f9fc;
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;
@@ -55,14 +56,10 @@
   }
   .navbtn:hover{ transform:translateY(-1px); background:rgba(255,255,255,.12) }
 
-  /* Drawer menú */
-  .drawer{
-    position:fixed; inset:0; z-index:80; display:none;
-  }
+  /* ===== Drawer (menú lateral) ===== */
+  .drawer{ position:fixed; inset:0; z-index:80; display:none }
   .drawer.show{ display:block }
-  .drawer .backdrop{
-    position:absolute; inset:0; background:rgba(0,0,0,.45);
-  }
+  .drawer .backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45) }
   .drawer .panel{
     position:absolute; top:0; left:0; bottom:0; width:min(86vw,360px);
     background:#0f131a; border-right:1px solid rgba(255,255,255,.08);
@@ -72,18 +69,20 @@
   .drawer.show .panel{ transform:none }
   .menu-title{ font-weight:800; margin:6px 2px 12px }
   .menu-item{
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:10px; justify-content:center;
     padding:12px; margin-bottom:10px; border-radius:12px;
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
-    cursor:pointer; user-select:none;
+    cursor:pointer; user-select:none; color:#e8eef8; text-decoration:none;
+    font-weight:800; letter-spacing:.2px;
   }
   .menu-item:hover{ background:rgba(255,255,255,.1) }
+  .menu-item.white{ background:#fff; color:#0e0f12; border-color:#fff }
 
-  /* Frame */
-  .app-frame{ max-width:1100px; margin:0 auto; padding:16px; }
+  /* ===== Frame ===== */
+  .app-frame{ max-width:1100px; margin:0 auto; padding:16px }
   @media (min-width:1000px){ .app-frame{ max-width:900px } }
 
-  /* Fondo animado */
+  /* ===== Fondo animado ===== */
   .bg-anim{
     position:fixed; inset:0; z-index:-2;
     background:
@@ -115,7 +114,7 @@
   .hero-title{ font-size:22px; font-weight:900; letter-spacing:.2px }
   .hero-sub{ color:#ccd6e7; font-size:13px }
 
-  /* Uploader */
+  /* ===== Uploader ===== */
   .uploader{
     background:linear-gradient(180deg,#151821,#11141a);
     border-radius:var(--radius);
@@ -139,14 +138,15 @@
   .btn:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none }
   .visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0 }
 
-  /* Previews */
+  /* ===== Previews ===== */
   .previews{ display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px }
   .preview{ position:relative; background:#0d1018; border:1px solid var(--glass); border-radius:12px; padding:6px; animation: fadeIn .35s ease }
   .preview img,.preview video{ width:100%; height:96px; object-fit:cover; border-radius:8px; display:block }
   .bar{ position:absolute; left:6px; right:6px; bottom:6px; height:6px; border-radius:6px; background:#222a39; overflow:hidden }
   .bar>span{ display:block; width:0%; height:100%; background:linear-gradient(90deg,var(--emerald),#6ff0d8); transition:width .2s }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
 
-  /* Ocultar (X) SOLO frontend */
+  /* ===== X (ocultar) ===== */
   .hideBtn{
     position:absolute; top:8px; left:8px; width:28px; height:28px; border-radius:999px;
     display:grid; place-items:center; font-weight:900; cursor:pointer; user-select:none;
@@ -154,14 +154,14 @@
     backdrop-filter:blur(4px); line-height:0; transform:scale(.95); transition:.2s; z-index:5;
   }
   .hideBtn:hover{ background:rgba(255,80,80,.75); border-color:rgba(255,255,255,.35); transform:scale(1) }
-  .thumb, .thumb-square { position:relative; }
+  .thumb, .thumb-square { position:relative }
   .thumb img, .thumb video, .thumb-square img, .thumb-square video{ position:relative; z-index:1 }
 
-  /* Carousel + grid */
+  /* ===== Carousel + grid ===== */
   .section-title{ margin:14px 6px 10px; color:#e8eef8; font-size:16px }
   .carousel{ display:flex; gap:12px; overflow:auto; scroll-snap-type:x mandatory; padding-bottom:6px }
   .carousel::-webkit-scrollbar{ display:none }
-  .slide{ flex:0 0 78vw; max-width:440px; scroll-snap-align:center; background:linear-gradient(180deg,#161a24,#11141a); border:1px solid var(--glass); border-radius:16px; overflow:hidden; position:relative; animation: fadeIn .45s ease; }
+  .slide{ flex:0 0 78vw; max-width:440px; scroll-snap-align:center; background:linear-gradient(180deg,#161a24,#11141a); border:1px solid var(--glass); border-radius:16px; overflow:hidden; position:relative; animation: fadeIn .45s ease }
   .thumb{ aspect-ratio:16/9; background:#0b0e14; position:relative }
   .chip{ position:absolute; top:10px; left:46px; background:rgba(14,17,22,.6); border:1px solid rgba(255,255,255,.12); color:#fff; padding:4px 8px; font-size:11px; border-radius:999px; backdrop-filter:blur(4px)}
   .slide img,.slide video{ width:100%; height:100%; object-fit:cover; display:block }
@@ -171,16 +171,14 @@
   .dl:hover{ transform:translateY(-1px) }
 
   .gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px }
-  .card{ background:linear-gradient(180deg,#151a23,#10131a); border:1px solid var(--glass); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; position:relative; animation: fadeIn .45s ease; }
+  .card{ background:linear-gradient(180deg,#151a23,#10131a); border:1px solid var(--glass); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; position:relative; animation: fadeIn .45s ease }
   .thumb-square{ aspect-ratio:1/1; background:#0b0e14; position:relative }
   .thumb-square img,.thumb-square video{ width:100%; height:100%; object-fit:cover }
 
-  /* Dedicatorias */
+  /* ===== Dedicatorias ===== */
   .dedi{ margin-top:22px; background:linear-gradient(180deg,#151821,#11141a); border:1px solid var(--glass); border-radius:18px; padding:16px; box-shadow:0 22px 44px rgba(0,0,0,.35) }
   .dedi form{ display:grid; gap:10px; grid-template-columns:1fr; margin-bottom:12px }
-  .dedi input,.dedi textarea{
-    background:#0f131a; color:#eaf1ff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px; font:inherit;
-  }
+  .dedi input,.dedi textarea{ background:#0f131a; color:#eaf1ff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px; font:inherit }
   .dedi textarea{ min-height:90px; resize:vertical }
   .dedi-list{ display:grid; gap:10px }
   .note{ color:#9fb0c7; font-size:13px; margin:8px 6px 0 }
@@ -200,7 +198,7 @@
       <button class="navbtn" id="menuBtn">☰ Menú</button>
       <div class="brand">
         <div class="logo"><img id="logoImg" alt="Logo"></div>
-        <h1 class="title">Mis XV – Memories</h1>
+        <h1 class="title">Mis XV AÑOS</h1>
       </div>
       <button class="navbtn" id="resetBtn">↺ Restaurar ocultas</button>
     </div>
@@ -212,7 +210,7 @@
     <div class="panel">
       <div class="menu-title">Opciones</div>
       <div class="menu-item" id="menuDedicatorias">✍️ Dedicatorias</div>
-      <a class="menu-item" href="https://drive.google.com/drive/folders/1GbcsgJkYvQxRMX4737E9a59loq-_NOz_?usp=drive_link" target="_blank" rel="noopener">☁️ Accede a la nube</a>
+      <a class="menu-item white" href="https://drive.google.com/drive/folders/1GbcsgJkYvQxRMX4737E9a59loq-_NOz_?usp=drive_link" target="_blank" rel="noopener">☁️ Accede a la nube</a>
     </div>
   </div>
 
@@ -222,7 +220,7 @@
       <img id="heroImg" class="hero-img" alt="Quinceañera">
       <div class="hero-overlay"></div>
       <div class="hero-meta">
-        <div class="hero-title" id="heroName">CYTLALLI</div>
+        <div class="hero-title" id="heroName">.⋅˚₊‧ 🜲 ‧₊˚ ⋅CYTLALLI💕.⋅˚₊‧ 🜲 ‧₊˚ ⋅</div>
         <div class="hero-sub" id="heroDate">Tu evento – ¡comparte tus recuerdos!</div>
       </div>
     </section>
@@ -252,7 +250,7 @@
       <div class="note" id="emptyMsg" style="display:none">Aún no hay recuerdos visibles.</div>
     </section>
 
-    <!-- DEDICATORIAS -->
+    <!-- Dedicatorias -->
     <section id="dedicatorias" class="dedi">
       <h3 class="section-title" style="margin-top:0">Dedicatorias</h3>
       <form id="dediForm">
@@ -264,7 +262,7 @@
         </div>
       </form>
       <div class="dedi-list" id="dediList"></div>
-      <div class="note">Tus dedicatorias se guardan en este dispositivo. Si quieres que se guarden en la nube, luego te paso un pequeño Apps Script para conectarlo a Google Sheets.</div>
+      <div class="note">Tus dedicatorias se guardan en este dispositivo. Si quieres que se guarden en la nube, luego te paso un Apps Script para Google Sheets.</div>
     </section>
   </div>
 
@@ -403,9 +401,9 @@
   }
   btn.addEventListener('click', uploadQueue);
 
-  /* ===== URLs de media robustas (móvil/desktop) ===== */
+  /* ===== URLs de media (móvil/desktop) ===== */
   function driveThumb(file){
-    // Miniatura directa de Drive (rápida)
+    // Miniatura directa (muy compatible en móvil)
     return `https://lh3.googleusercontent.com/d/${file.id}=w400-h400-n-k-no`;
   }
   function drivePreviewSrc(file){
@@ -428,30 +426,27 @@
     });
   }
 
-  /* Pintar UI */
+  /* ===== Render ===== */
   function renderAll(files){
     const visible = files.filter(f=>!hidden.has(f.id));
     emptyMsg.style.display = visible.length ? 'none' : 'block';
 
-    // Carrusel (Destacados)
+    // Carrusel (primeros 12)
     const top=visible.slice(0,12);
     const cfrag=document.createDocumentFragment();
     top.forEach(f=>{
       const slide=document.createElement('div'); slide.className='slide';
+
       const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
       attachHide(hide, f.id, slide); slide.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb';
       const chip=document.createElement('div'); chip.className='chip'; chip.textContent=(f.mimeType||'').startsWith('video/')?'Video':'Foto';
-      let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
 
-      m.src=drivePreviewSrc(f);
-      m.loading='lazy';
-      m.onerror = () => { if(m.tagName==='IMG'){ m.src=`https://drive.google.com/uc?export=view&id=${f.id}`; } };
-      if(m.tagName==='VIDEO'){
-        m.muted=true; m.playsInline=true; m.controls=true;
-        m.poster = driveThumb(f);
-      } else { m.alt=f.name||''; }
+      let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
+      m.src=drivePreviewSrc(f); m.loading='lazy';
+      if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; m.poster = driveThumb(f); }
+      else { m.alt=f.name||''; m.onerror=()=>{ m.src=`https://drive.google.com/uc?export=view&id=${f.id}`; }; }
 
       t.appendChild(m); t.appendChild(chip);
 
@@ -465,24 +460,19 @@
     carousel.innerHTML=''; carousel.appendChild(cfrag);
     startAutoplay();
 
-    // Grid (Galería completa)
+    // Grid
     const gfrag=document.createDocumentFragment();
     visible.forEach(f=>{
       const card=document.createElement('div'); card.className='card';
+
       const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
       attachHide(hide, f.id, card); card.appendChild(hide);
 
       const t=document.createElement('div'); t.className='thumb-square';
       let m=(f.mimeType||'').startsWith('video/')?document.createElement('video'):document.createElement('img');
-
-      m.src=drivePreviewSrc(f);
-      m.loading='lazy';
-      m.onerror = () => { if(m.tagName==='IMG'){ m.src=`https://drive.google.com/uc?export=view&id=${f.id}`; } };
-      if(m.tagName==='VIDEO'){
-        m.muted=true; m.playsInline=true; m.controls=true;
-        m.poster = driveThumb(f);
-      } else { m.alt=f.name||''; }
-
+      m.src=drivePreviewSrc(f); m.loading='lazy';
+      if(m.tagName==='VIDEO'){ m.muted=true; m.playsInline=true; m.controls=true; m.poster = driveThumb(f); }
+      else { m.alt=f.name||''; m.onerror=()=>{ m.src=`https://drive.google.com/uc?export=view&id=${f.id}`; }; }
       t.appendChild(m);
 
       const meta=document.createElement('div'); meta.className='meta';
@@ -495,7 +485,7 @@
     gallery.innerHTML=''; gallery.appendChild(gfrag);
   }
 
-  /* Autoplay carrusel */
+  /* ===== Autoplay carrusel ===== */
   let autoplayTimer;
   function startAutoplay(){
     clearInterval(autoplayTimer);
@@ -504,74 +494,48 @@
       const next=Math.min(carousel.scrollLeft + carousel.clientWidth*0.92, carousel.scrollWidth);
       carousel.scrollTo({left:next, behavior:'smooth'});
       if(carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 4){
-        setTimeout(()=>carousel.scrollTo({left:0, behavior:'smooth'}), 1500);
+        setTimeout(()=>carousel.scrollTo({left:0, behavior:'smooth'}), 1200);
       }
-    }, 3200);
+    }, 3000);
   }
 
-  /* Inicio */
-  refreshGallery({retries:1, wait:1000});
-
-  /* ====== DEDICATORIAS (localStorage) ====== */
-  const DEDI_KEY='dedicatorias_v1';
+  /* ===== Dedicatorias (localStorage) ===== */
   const dediForm=document.getElementById('dediForm');
-  const dediNombre=document.getElementById('dediNombre');
-  const dediMsg=document.getElementById('dediMsg');
   const dediList=document.getElementById('dediList');
-  const exportBtn=document.getElementById('exportCSV');
-
-  function loadDedi(){
-    return JSON.parse(localStorage.getItem(DEDI_KEY)||'[]');
-  }
-  function saveDedi(arr){
-    localStorage.setItem(DEDI_KEY, JSON.stringify(arr));
-  }
-  function renderDedi(){
-    const arr=loadDedi();
+  let dedis=JSON.parse(localStorage.getItem('dedicatorias')||'[]');
+  function pintarDedis(){
     dediList.innerHTML='';
-    arr.forEach((d,i)=>{
+    dedis.slice().reverse().forEach(d=>{
       const item=document.createElement('div');
-      item.className='card';
-      item.style.padding='10px';
-      item.innerHTML=`
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
-          <div>
-            <div style="font-weight:800">${d.nombre || 'Anónimo'}</div>
-            <div style="font-size:12px; color:#9fb0c7">${new Date(d.ts).toLocaleString()}</div>
-          </div>
-          <button class="navbtn" data-i="${i}">Eliminar</button>
-        </div>
-        <div style="margin-top:8px; white-space:pre-wrap">${d.msg}</div>
-      `;
-      item.querySelector('button').onclick=()=>{
-        const a=loadDedi(); a.splice(i,1); saveDedi(a); renderDedi();
-      };
+      item.style.background='#0f131a'; item.style.border='1px solid rgba(255,255,255,.08)';
+      item.style.borderRadius='12px'; item.style.padding='10px';
+      item.innerHTML = `<strong>${d.nombre}</strong> <span style="opacity:.7;font-size:12px">(${d.fecha})</span><br>${d.mensaje}`;
       dediList.appendChild(item);
     });
   }
-  dediForm.onsubmit=(e)=>{
+  pintarDedis();
+  dediForm.addEventListener('submit', (e)=>{
     e.preventDefault();
-    const nombre=dediNombre.value.trim();
-    const msg=dediMsg.value.trim();
-    if(!msg) return;
-    const arr=loadDedi();
-    arr.unshift({nombre, msg, ts:Date.now()});
-    saveDedi(arr);
-    dediNombre.value=''; dediMsg.value=''; renderDedi();
-    showToast('💌 Dedicatoria guardada');
-  };
-  exportBtn.onclick=()=>{
-    const arr=loadDedi();
-    const rows=[['nombre','mensaje','timestamp']];
-    arr.forEach(d=>rows.push([d.nombre, d.msg.replace(/\n/g,' '), new Date(d.ts).toISOString()]));
-    const csv = rows.map(r=>r.map(x=>`"${(x||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob); a.download='dedicatorias.csv'; a.click();
-  };
-  renderDedi();
+    const nombre=document.getElementById('dediNombre').value.trim();
+    const mensaje=document.getElementById('dediMsg').value.trim();
+    if(!nombre||!mensaje) return;
+    const nuevo={nombre,mensaje,fecha:new Date().toLocaleString()};
+    dedis.push(nuevo);
+    localStorage.setItem('dedicatorias', JSON.stringify(dedis));
+    e.target.reset(); pintarDedis(); showToast('💌 Dedicatoria guardada');
+  });
+  document.getElementById('exportCSV').addEventListener('click', ()=>{
+    let csv='Nombre,Mensaje,Fecha\n';
+    dedis.forEach(d=>{csv+=`"${d.nombre.replace(/"/g,'""')}","${d.mensaje.replace(/"/g,'""')}","${d.fecha}"\n`;});
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='dedicatorias.csv'; a.click();
+  });
+
+  /* ===== Inicio ===== */
+  refreshGallery({retries:1, wait:1000});
 </script>
 </body>
 </html>
+
 
 
