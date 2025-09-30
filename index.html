@@ -11,137 +11,495 @@
 <meta name="apple-mobile-web-app-title" content="Mis XV – Memories" />
 
 <style>
-  /* 🎨 Conservé todos tus estilos originales */
   :root{ --bg:#0e0f12; --card:#14161c; --muted:#b7becb;
          --copper1:#a66a54; --copper2:#d19a7d; --emerald:#22c3a6;
          --glass:rgba(255,255,255,.06); --radius:18px; }
   *{box-sizing:border-box} html,body{height:100%}
   body{ margin:0; color:#f7f9fc; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
         background: radial-gradient(1200px 600px at 50% -10%, #1b202a 0, var(--bg) 60%); overflow-x:hidden; }
-  /* ... (dejo tus estilos intactos para hero, uploader, dedicatorias, etc.) ... */
 
-  /* Botón flotante música */
-  .music-btn {
-    position:fixed; bottom:20px; right:20px; z-index:90;
-    background:#22c3a6; color:#000; border-radius:50%;
-    width:56px; height:56px; display:flex; align-items:center; justify-content:center;
-    font-size:22px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,.4);
-  }
+  .appbar{ position:sticky; top:0; z-index:60; backdrop-filter:saturate(120%) blur(8px);
+    background:linear-gradient(180deg,rgba(10,12,16,.75),rgba(10,12,16,.45));
+    border-bottom:1px solid rgba(255,255,255,.06); padding: env(safe-area-inset-top) 10px 10px 12px; }
+  .appbar .row{ display:flex; align-items:center; gap:10px; max-width:1100px; margin:0 auto; }
+  .brand{ display:flex; align-items:center; gap:10px; margin:0 auto; text-align:center; }
+  .logo{ width:32px; height:32px; border-radius:10px; overflow:hidden; box-shadow:0 6px 18px rgba(209,154,125,.35); background:#1a1f2a; }
+  .logo img{width:100%; height:100%; object-fit:cover; display:block}
+  .title{ margin:0; font-size:18px; font-weight:800 }
+  .navbtn{ display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14); color:#e8eef8; padding:8px 12px; border-radius:12px; cursor:pointer;
+    font-weight:700; letter-spacing:.2px; user-select:none; transition:.2s; backdrop-filter:blur(6px); }
+  .navbtn:hover{ transform:translateY(-1px); background:rgba(255,255,255,.12) }
+
+  .drawer{ position:fixed; inset:0; z-index:80; display:none } .drawer.show{display:block}
+  .drawer .backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45) }
+  .drawer .panel{ position:absolute; top:0; left:0; bottom:0; width:min(86vw,360px); background:#0f131a;
+    border-right:1px solid rgba(255,255,255,.08); box-shadow:0 14px 40px rgba(0,0,0,.45);
+    padding:14px; transform:translateX(-100%); transition:.25s; }
+  .drawer.show .panel{ transform:none }
+  .menu-title{ font-weight:800; margin:6px 2px 12px }
+  .menu-item{ display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; margin-bottom:10px;
+    border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); cursor:pointer;
+    color:#e8eef8; text-decoration:none; font-weight:800; letter-spacing:.2px; }
+  .menu-item:hover{ background:rgba(255,255,255,.1) }
+  .menu-item.white{ background:#fff; color:#0e0f12; border-color:#fff }
+
+  .app-frame{ max-width:1100px; margin:0 auto; padding:16px } @media (min-width:1000px){ .app-frame{ max-width:900px } }
+
+  .bg-anim{ position:fixed; inset:0; z-index:-2;
+    background: radial-gradient(1200px 600px at 20% -20%, #252b36 0, transparent 60%),
+               radial-gradient(900px 500px at 80% -10%, #1f2430 0, transparent 65%),
+               linear-gradient(180deg,#0b0c10,#0e0f12); animation:hue 22s linear infinite; }
+  @keyframes hue{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(360deg)}}
+  .bubbles{position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden}
+  .bubble{position:absolute; width:12px; height:12px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #72ffe8 0, #41dfc6 40%, transparent 70%);
+    opacity:.12; animation: float 18s linear infinite; filter:blur(1px)}
+  @keyframes float{ from{ transform:translateY(110vh)} to{ transform:translateY(-10vh)} }
+
+  .hero-card{ position:relative; overflow:hidden; border-radius:28px; background:#11151c; border:1px solid var(--glass);
+    box-shadow:0 24px 48px rgba(0,0,0,.35); margin-bottom:16px; }
+  .hero-img{ width:100%; aspect-ratio:9/10; object-fit:cover; display:block; filter:saturate(.98) }
+  .hero-overlay{ position:absolute; inset:0;
+    background:linear-gradient(180deg,rgba(0,0,0,.15) 20%, rgba(0,0,0,.55) 70%, rgba(0,0,0,.8) 100%); }
+  .hero-meta{ position:absolute; left:0; right:0; bottom:0; padding:16px; display:flex; flex-direction:column;
+    align-items:center; text-align:center; gap:8px; }
+  .hero-title{ font-size:22px; font-weight:900; letter-spacing:.2px }
+  .hero-sub{ color:#ccd6e7; font-size:13px }
+  .hero-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .hbtn{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; font-weight:800;
+    border-radius:999px; padding:8px 12px; cursor:pointer }
+
+  .uploader{ background:linear-gradient(180deg,#151821,#11141a); border-radius:var(--radius); padding:16px; display:grid; gap:12px;
+    box-shadow:0 24px 48px rgba(0,0,0,.35); border:1px solid var(--glass); }
+  .row-grid{ display:grid; gap:12px; grid-template-columns:1fr auto; align-items:center }
+  .dropzone{ border:2px dashed rgba(214,160,136,.5); border-radius:16px; padding:18px; text-align:center;
+    cursor:pointer; background:#131722; transition:.25s; }
+  .dropzone:hover{ border-color:var(--copper2); box-shadow:0 0 0 2px rgba(209,154,125,.25) inset; transform:translateY(-1px) }
+  .help{ color:#9fb0c7; font-size:13px }
+  .btn{ background:linear-gradient(90deg,var(--copper1),var(--copper2)); color:#0d0f14; border:0; padding:12px 16px; border-radius:14px;
+    font-weight:800; cursor:pointer; letter-spacing:.2px; box-shadow:0 10px 24px rgba(209,154,125,.35); transition:.2s; }
+  .btn:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none }
+  .visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0 }
+
+  .previews{ display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px }
+  .preview{ position:relative; background:#0d1018; border:1px solid var(--glass); border-radius:12px; padding:6px; animation: fadeIn .35s ease }
+  .preview img,.preview video{ width:100%; height:96px; object-fit:cover; border-radius:8px; display:block }
+  .bar{ position:absolute; left:6px; right:6px; bottom:6px; height:6px; border-radius:6px; background:#222a39; overflow:hidden }
+  .bar>span{ display:block; width:0%; height:100%; background:linear-gradient(90deg,var(--emerald),#6ff0d8); transition:width .2s }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+
+  .hideBtn{ position:absolute; top:8px; left:8px; width:28px; height:28px; border-radius:999px; display:grid; place-items:center;
+    font-weight:900; cursor:pointer; background:rgba(14,17,22,.65); border:1px solid rgba(255,255,255,.2); color:#fff;
+    backdrop-filter:blur(4px); line-height:0; transform:scale(.95); transition:.2s; z-index:5; }
+  .hideBtn:hover{ background:rgba(255,80,80,.75); border-color:rgba(255,255,255,.35); transform:scale(1) }
+  .thumb,.thumb-square{ position:relative } .thumb img,.thumb video,.thumb-square img,.thumb-square video{ position:relative; z-index:1 }
+
+  .section-title{ margin:14px 6px 10px; color:#e8eef8; font-size:16px }
+  .carousel{ display:flex; gap:12px; overflow:auto; scroll-snap-type:x mandatory; padding-bottom:6px } .carousel::-webkit-scrollbar{display:none}
+  .slide{ flex:0 0 78vw; max-width:440px; scroll-snap-align:center; background:linear-gradient(180deg,#161a24,#11141a);
+    border:1px solid var(--glass); border-radius:16px; overflow:hidden; position:relative; animation: fadeIn .45s ease }
+  .thumb{ aspect-ratio:16/9; background:#0b0e14; position:relative }
+  .chip{ position:absolute; top:10px; left:46px; background:rgba(14,17,22,.6); border:1px solid rgba(255,255,255,.12);
+    color:#fff; padding:4px 8px; font-size:11px; border-radius:999px; backdrop-filter:blur(4px)}
+  .slide img,.slide video{ width:100%; height:100%; object-fit:cover; display:block }
+  .meta{ display:flex; justify-content:space-between; align-items:center; padding:10px }
+  .name{ font-size:13px; color:#f3f7ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .dl{ font-size:12px; color:#0e1116; background:linear-gradient(90deg,#41dfc6,#72ffe8); border-radius:10px; padding:6px 8px; font-weight:800; text-decoration:none; transition:.2s }
+  .dl:hover{ transform:translateY(-1px) }
+
+  .gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px }
+  .card{ background:linear-gradient(180deg,#151a23,#10131a); border:1px solid var(--glass); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; position:relative; animation: fadeIn .45s ease }
+  .thumb-square{ aspect-ratio:1/1; background:#0b0e14; position:relative }
+  .thumb-square img,.thumb-square video{ width:100%; height:100%; object-fit:cover }
+
+  .dedi{ margin-top:22px; background:linear-gradient(180deg,#151821,#11141a); border:1px solid var(--glass); border-radius:18px; padding:16px; box-shadow:0 22px 44px rgba(0,0,0,.35) }
+  .dedi form{ display:grid; gap:10px; grid-template-columns:1fr; margin-bottom:8px }
+  .dedi input,.dedi textarea{ background:#0f131a; color:#eaf1ff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px; font:inherit }
+  .dedi textarea{ min-height:90px; resize:vertical }
+  .dedi-actions{ display:flex; gap:10px; flex-wrap:wrap; margin:6px 0 12px }
+  .dedi-list{ display:grid; gap:10px }
+  .note{ color:#9fb0c7; font-size:13px; margin:8px 6px 0 }
+
+  .toast{ position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-20px); background:rgba(20,24,31,.9); color:#e8f1ff; border:1px solid var(--glass); padding:10px 14px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:.3s; z-index:90 }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0) }
+
+  /* Botón de música */
+  .music-btn{ position:fixed; right:14px; bottom:18px; z-index:70; display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; padding:10px 12px; border-radius:18px; cursor:pointer;
+    backdrop-filter:blur(6px); font-weight:800; }
+  .music-dot{ width:8px; height:8px; border-radius:50%; background:#ff7ab6; box-shadow:0 0 6px #ff7ab6 }
 </style>
 </head>
 <body>
-  <!-- Hero y todo tu diseño original aquí -->
+  <div class="bg-anim"></div>
+  <div class="bubbles" id="bubbles"></div>
 
-  <!-- Galería -->
-  <section>
-    <h3 class="section-title">Galería completa</h3>
-    <div class="gallery" id="gallery"></div>
-    <div class="note" id="emptyMsg" style="display:none">Aún no hay recuerdos visibles.</div>
-  </section>
-
-  <!-- Dedicatorias -->
-  <section id="dedicatorias" class="dedi">
-    <h3 class="section-title" style="margin-top:0">Dedicatorias</h3>
-    <form id="dediForm">
-      <input id="dediNombre" placeholder="Tu nombre" required />
-      <textarea id="dediMsg" placeholder="Escribe tu mensaje para CYTLALLI" required></textarea>
-      <div class="dedi-actions">
-        <button type="submit" class="btn">Enviar dedicatoria</button>
-        <button type="button" id="toggleList" class="btn" style="background:linear-gradient(90deg,#41dfc6,#72ffe8)">👀 Ver dedicatorias</button>
-        <button type="button" id="downloadDedis" class="btn" style="background:#2feaa0">⬇️ Descargar dedicatorias</button>
+  <div class="appbar">
+    <div class="row">
+      <button class="navbtn" id="menuBtn">☰ Menú</button>
+      <div class="brand">
+        <div class="logo"><img id="logoImg" alt="Logo"></div>
+        <h1 class="title">Mis XV AÑOS</h1>
       </div>
-    </form>
-    <div class="dedi-list" id="dediList" style="display:none"></div>
-    <div class="note">Las dedicatorias se guardan en la nube y se muestran abajo.</div>
-  </section>
+      <button class="navbtn" id="resetBtn">↺ Restaurar ocultas</button>
+    </div>
+  </div>
 
-  <!-- Botón flotante música -->
-  <div id="musicBtn" class="music-btn">▶️</div>
-  <audio id="bgmusic" loop>
-    <source src="https://script.google.com/macros/s/AKfycbxp09tad2Jj4_yVEuEG6TKM2n4rCCVTM6KtANJlkp3AABifAhfZvuRGMsRr3rsiOL4/exec?action=audio" type="audio/mpeg">
-  </audio>
+  <!-- Drawer -->
+  <div class="drawer" id="drawer">
+    <div class="backdrop" id="drawerBackdrop"></div>
+    <div class="panel">
+      <div class="menu-title">Opciones</div>
+      <div class="menu-item" id="menuDedicatorias">✍️ Dedicatorias</div>
+      <a class="menu-item white" href="https://drive.google.com/drive/folders/1GbcsgJkYvQxRMX4737E9a59loq-_NOz_?usp=drive_link" target="_blank" rel="noopener">☁️ Accede a la nube</a>
+    </div>
+  </div>
 
-  <script>
+  <div class="app-frame">
+    <!-- HERO -->
+    <section class="hero-card">
+      <img id="heroImg" class="hero-img" alt="Quinceañera">
+      <div class="hero-overlay"></div>
+      <div class="hero-meta">
+        <div class="hero-title" id="heroName">.⋅˚₊‧ 🜲 ‧₊˚ ⋅CYTLALLI.⋅˚₊‧ 🜲 ‧₊˚ ⋅</div>
+        <div class="hero-sub" id="heroDate">Tu evento – ¡comparte tus recuerdos!</div>
+        <div class="hero-actions">
+          <button class="hbtn" id="goRead">👀 Ver dedicatorias</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Uploader -->
+    <section class="uploader">
+      <div class="row-grid">
+        <label class="dropzone" for="fileInput">
+          <div><strong>Toca o arrastra archivos aquí</strong></div>
+          <div class="help">Formato: JPG, PNG, HEIC*, MP4, MOV, etc.</div>
+        </label>
+        <button class="btn" id="uploadBtn" disabled>Subir recuerdos a la nube</button>
+      </div>
+      <input id="fileInput" class="visually-hidden" type="file" accept="image/*,video/*" multiple>
+      <div class="previews" id="previews"></div>
+      <div class="note" id="statusMsg"></div>
+    </section>
+
+    <section>
+      <h3 class="section-title">Destacados</h3>
+      <div class="carousel" id="carousel"></div>
+    </section>
+
+    <section>
+      <h3 class="section-title">Galería completa</h3>
+      <div class="gallery" id="gallery"></div>
+      <div class="note" id="emptyMsg" style="display:none">Aún no hay recuerdos visibles.</div>
+    </section>
+
+    <!-- Dedicatorias -->
+    <section id="dedicatorias" class="dedi">
+      <h3 class="section-title" style="margin-top:0">Dedicatorias</h3>
+      <form id="dediForm">
+        <input id="dediNombre" placeholder="Tu nombre" required />
+        <textarea id="dediMsg" placeholder="Escribe tu mensaje para CYTLALLI" required></textarea>
+        <div class="dedi-actions">
+          <button type="submit" class="btn">Enviar dedicatoria</button>
+          <button type="button" id="toggleList" class="btn" style="background:linear-gradient(90deg,#41dfc6,#72ffe8)">👀 Ver dedicatorias</button>
+          <button type="button" id="downloadDedis" class="btn" style="background:#2feaa0">⬇️ Descargar dedicatorias</button>
+        </div>
+      </form>
+      <div class="dedi-list" id="dediList" style="display:none"></div>
+      <div class="note">Las dedicatorias se guardan en la nube y se muestran abajo.</div>
+    </section>
+  </div>
+
+  <!-- Música -->
+  <button class="music-btn" id="musicBtn" aria-pressed="false">
+    <span class="music-dot" id="musicDot"></span> Música
+  </button>
+  <audio id="bgMusic" preload="none" loop></audio>
+
+  <div class="toast" id="toast">✅ Recuerdo subido</div>
+
+<script>
   /* ===== CONFIG ===== */
-  const API_URL = "https://script.google.com/macros/s/AKfycbxp09tad2Jj4_yVEuEG6TKM2n4rCCVTM6KtANJlkp3AABifAhfZvuRGMsRr3rsiOL4/exec";
-  const gallery = document.getElementById('gallery');
-  const dediForm = document.getElementById('dediForm');
-  const dediList = document.getElementById('dediList');
+  // NUEVO Apps Script (último que enviaste)
+  const API_URL   = 'https://script.google.com/macros/s/AKfycbz3v9YfCcZKpMz6_Oc4F-mWIWgmaY1QxnJKmcQ7JA6kyRVOKSOSHYm7vulmcb1l1DlR/exec';
+  const HERO_URL  = 'https://i.ibb.co/4nTRHhrs/IMG-20250929-WA0056.jpg';
+  const LOGO_URL  = 'https://i.ibb.co/0VCsT0HB/LOGO-Cytlalli-pdf-page-0001.jpg';
+  // Canción (tu link de Drive)
+  const MUSIC_ID  = '1gLW5ATa29lJt7R-Pxd1nUVJ81tIkILJg';
 
-  /* ===== Cargar galería ===== */
-  async function loadGallery(){
-    const res = await fetch(API_URL + "?action=files");
-    const data = await res.json();
-    gallery.innerHTML = "";
-    if(data.ok){
-      data.files.forEach(f=>{
-        const card = document.createElement('div');
-        card.className="card";
-        if(f.mimeType.startsWith("video/")){
-          const v=document.createElement('video');
-          v.src=`https://drive.google.com/uc?export=download&id=${f.id}`;
-          v.controls=true;
-          card.appendChild(v);
-        }else{
-          const img=document.createElement('img');
-          img.loading="lazy"; img.decoding="async";
-          img.src=`https://drive.google.com/uc?export=view&id=${f.id}`;
-          card.appendChild(img);
-        }
-        gallery.appendChild(card);
-      });
-    }
+  heroImg.src = HERO_URL; logoImg.src = LOGO_URL;
+
+  /* ===== Menú / Navegación ===== */
+  const drawer = document.getElementById('drawer');
+  menuBtn.onclick = () => drawer.classList.add('show');
+  drawerBackdrop.onclick = () => drawer.classList.remove('show');
+  document.getElementById('menuDedicatorias').onclick = () => { drawer.classList.remove('show'); document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'}); };
+  resetBtn.onclick = () => { localStorage.removeItem('hidden_ids_v1'); localStorage.removeItem('hidden_dedis_v1'); location.reload(); };
+  document.getElementById('goRead').onclick  = async () => { await loadDedicatorias(); document.getElementById('dediList').style.display='block'; document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'}); };
+
+  /* ===== Fondo burbujas ===== */
+  const bubbles = document.getElementById('bubbles');
+  for(let i=0;i<18;i++){ const b=document.createElement('div'); b.className='bubble';
+    b.style.left=Math.random()*100+'%'; b.style.animationDuration=(14+Math.random()*10)+'s';
+    b.style.animationDelay=(-Math.random()*18)+'s'; bubbles.appendChild(b); }
+
+  /* ===== Subida ===== */
+  const input = document.getElementById('fileInput');
+  const btn = document.getElementById('uploadBtn');
+  const previews = document.getElementById('previews');
+  const gallery = document.getElementById('gallery');
+  const carousel = document.getElementById('carousel');
+  const statusMsg = document.getElementById('statusMsg');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const toast = document.getElementById('toast');
+  let queue = [];
+
+  function bytesToBase64(buf){ let b=''; const u=new Uint8Array(buf); for(let i=0;i<u.byteLength;i++) b+=String.fromCharCode(u[i]); return btoa(b); }
+  function showToast(msg='✅ Hecho'){ toast.textContent=msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1600); }
+
+  function addPreview(file){
+    const wrap=document.createElement('div'); wrap.className='preview';
+    const media = file.type.startsWith('video/')? document.createElement('video'): document.createElement('img');
+    media.src=URL.createObjectURL(file); if(media.tagName==='VIDEO'){ media.muted=true; media.playsInline=true; }
+    const bar=document.createElement('div'); bar.className='bar'; const span=document.createElement('span'); bar.appendChild(span);
+    wrap.appendChild(media); wrap.appendChild(bar); previews.appendChild(wrap); return span;
+  }
+  function onFilesSelected(list){
+    Array.from(list).forEach(f=>{ if(!/^(image|video)\//.test(f.type)) return; const p=addPreview(f); queue.push({file:f,progressEl:p}); });
+    btn.disabled = queue.length===0;
+  }
+  input.addEventListener('change', e=>onFilesSelected(e.target.files));
+  document.addEventListener('dragover', e=>e.preventDefault());
+  document.addEventListener('drop', e=>{ e.preventDefault(); onFilesSelected(e.dataTransfer.files); });
+
+  /* ===== JSONP (files & dedis) ===== */
+  function fetchJsonp(action='files'){
+    return new Promise(resolve=>{
+      const cb='jsonp_'+Math.random().toString(36).slice(2);
+      window[cb]=(res)=>{ try{ resolve(res||{ok:false}); } finally{ delete window[cb]; s.remove(); } };
+      const s=document.createElement('script');
+      s.src=API_URL+(API_URL.includes('?')?'&':'?')+'action='+encodeURIComponent(action)+'&callback='+cb;
+      s.async=true; document.body.appendChild(s);
+    });
+  }
+
+  async function refreshGallery(){
+    statusMsg.textContent='Cargando galería…';
+    const res=await fetchJsonp('files');
+    if(res&&res.ok){ renderAll(res.files||[]); }
+    statusMsg.textContent='';
+  }
+
+  async function uploadQueue(){
+    if(queue.length===0) return;
+    const prev=btn.textContent; btn.textContent='Subiendo…'; btn.disabled=true;
+    const payload=[]; 
+    for(const it of queue){ const buf=await it.file.arrayBuffer(); payload.push({name:it.file.name,mimeType:it.file.type,bytes:bytesToBase64(buf)}); }
+    try{
+      await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({files:payload})});
+    }catch(e){ alert('Error subiendo: '+e.message); }
+    setTimeout(async ()=>{
+      await refreshGallery();
+      queue.forEach(q=>q.progressEl.style.width='100%');
+      queue=[]; input.value=''; previews.innerHTML='';
+      showToast('✅ Recuerdo(s) subido(s)');
+      btn.textContent=prev; btn.disabled=false;
+    }, 1500);
+  }
+  btn.addEventListener('click', uploadQueue);
+
+  /* ===== Miniaturas & descargas ===== */
+  function setBestImage(el, id){
+    const urls = [
+      `https://lh3.googleusercontent.com/d/${id}=w800-h800-n-k-no`,
+      `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
+      `https://drive.google.com/uc?export=view&id=${id}`
+    ];
+    let i=0; const tryNext=()=>{ if(i>=urls.length) return; el.src=urls[i++]; };
+    el.onerror = tryNext; tryNext();
+    el.loading='lazy'; el.decoding='async'; el.referrerPolicy='no-referrer';
+  }
+  function downloadHref(id){ return `https://drive.google.com/uc?export=download&id=${id}`; }
+  function isVideo(mt){ return (mt||'').startsWith('video/'); }
+
+  /* ===== Ocultar tarjetas de GALERÍA (solo front) ===== */
+  const HIDE_KEY='hidden_ids_v1';
+  const hidden=new Set(JSON.parse(localStorage.getItem(HIDE_KEY)||'[]'));
+  function hideId(id){ hidden.add(id); localStorage.setItem(HIDE_KEY,JSON.stringify([...hidden])); }
+  function attachHide(btn,id,card){ btn.addEventListener('click',()=>{ hideId(id); card.style.transition='transform .25s, opacity .25s'; card.style.transform='scale(.96)'; card.style.opacity='0'; setTimeout(()=>card.remove(),220); }); }
+
+  /* ===== Render carrusel + grid ===== */
+  function renderAll(files){
+    const visible=files.filter(f=>!hidden.has(f.id));
+    emptyMsg.style.display=visible.length?'none':'block';
+    visible.sort((a,b)=> String(b.name||b.id).localeCompare(a.name||a.id));
+
+    // Destacados
+    const top=visible.slice(0,12);
+    const cfrag=document.createDocumentFragment();
+    top.forEach(f=>{
+      const slide=document.createElement('div'); slide.className='slide';
+      const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
+      attachHide(hide,f.id,slide); slide.appendChild(hide);
+
+      const t=document.createElement('div'); t.className='thumb';
+      const chip=document.createElement('div'); chip.className='chip'; chip.textContent=isVideo(f.mimeType)?'Video':'Foto';
+
+      if(isVideo(f.mimeType)){
+        const v=document.createElement('video');
+        v.src=downloadHref(f.id); v.muted=true; v.playsInline=true; v.controls=true;
+        t.appendChild(v);
+      }else{
+        const img=document.createElement('img'); setBestImage(img,f.id); img.alt=f.name||'';
+        t.appendChild(img);
+      }
+      t.appendChild(chip);
+
+      const meta=document.createElement('div'); meta.className='meta';
+      const name=document.createElement('div'); name.className='name'; name.textContent=f.name||f.id;
+      const a=document.createElement('a'); a.className='dl'; a.href=downloadHref(f.id); a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
+      meta.appendChild(name); meta.appendChild(a);
+
+      slide.appendChild(t); slide.appendChild(meta); cfrag.appendChild(slide);
+    });
+    carousel.innerHTML=''; carousel.appendChild(cfrag);
+
+    // Galería
+    const gfrag=document.createDocumentFragment();
+    visible.forEach(f=>{
+      const card=document.createElement('div'); card.className='card';
+      const hide=document.createElement('div'); hide.className='hideBtn'; hide.textContent='×'; hide.title='Ocultar';
+      attachHide(hide,f.id,card); card.appendChild(hide);
+
+      const t=document.createElement('div'); t.className='thumb-square';
+      if(isVideo(f.mimeType)){
+        const v=document.createElement('video');
+        v.src=downloadHref(f.id); v.muted=true; v.playsInline=true; v.controls=true;
+        t.appendChild(v);
+      }else{
+        const img=document.createElement('img'); setBestImage(img,f.id); img.alt=f.name||'';
+        t.appendChild(img);
+      }
+
+      const meta=document.createElement('div'); meta.className='meta';
+      const name=document.createElement('div'); name.className='name'; name.textContent=f.name||f.id;
+      const a=document.createElement('a'); a.className='dl'; a.href=downloadHref(f.id); a.target='_blank'; a.rel='noopener'; a.textContent='Descargar';
+      meta.appendChild(name); meta.appendChild(a);
+
+      card.appendChild(t); card.appendChild(meta); gfrag.appendChild(card);
+    });
+    gallery.innerHTML=''; gallery.appendChild(gfrag);
   }
 
   /* ===== Dedicatorias ===== */
-  dediForm.onsubmit=async(e)=>{
-    e.preventDefault();
-    const nombre=document.getElementById('dediNombre').value;
-    const mensaje=document.getElementById('dediMsg').value;
-    await fetch(API_URL,{method:"POST",body:JSON.stringify({dedi:{nombre,mensaje}})});
-    document.getElementById('dediNombre').value="";
-    document.getElementById('dediMsg').value="";
-    loadDedis();
-  };
+  const dediForm = document.getElementById('dediForm');
+  const dediList = document.getElementById('dediList');
+  const toggleListBtn = document.getElementById('toggleList');
+  const downloadBtn = document.getElementById('downloadDedis');
 
-  async function loadDedis(){
-    const res=await fetch(API_URL+"?action=dedis");
-    const data=await res.json();
-    dediList.innerHTML="";
-    if(data.ok){
-      data.dedis.forEach(d=>{
-        const item=document.createElement('div');
-        item.className="dedi-item";
-        item.innerHTML=`<strong>${d.nombre}</strong><br>${d.mensaje}<br><small>${d.fecha}</small>`;
-        const hide=document.createElement('button');
-        hide.className="hideBtn"; hide.textContent="×";
-        hide.onclick=()=>item.remove();
-        item.appendChild(hide);
-        dediList.appendChild(item);
-      });
-    }
+  const HIDE_DEDI_KEY='hidden_dedis_v1';
+  const hiddenDedis=new Set(JSON.parse(localStorage.getItem(HIDE_DEDI_KEY)||'[]'));
+  function hideDedi(id){ hiddenDedis.add(id); localStorage.setItem(HIDE_DEDI_KEY,JSON.stringify([...hiddenDedis])); }
+
+  function renderDedis(items){
+    dediList.innerHTML='';
+    let idx=0;
+    items.forEach(d=>{
+      const localId = (d.id || (d.fecha+'_'+d.nombre+'_'+idx++)).toString();
+      if(hiddenDedis.has(localId)) return;
+      const card=document.createElement('div');
+      card.style.cssText='background:#0f131a;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;position:relative';
+      const fecha = d.fecha ? new Date(d.fecha).toLocaleString() : '';
+      card.innerHTML = `<div style="font-weight:800;margin-bottom:4px">${(d.nombre||'Anónimo')
+        .toString()} <span style="color:#9fb0c7;font-weight:400">• ${fecha}</span></div>
+                        <div style="white-space:pre-wrap">${(d.mensaje||'').toString()}</div>`;
+      const x=document.createElement('button');
+      x.textContent='×'; x.title='Ocultar'; x.style.cssText='position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer';
+      x.onclick=()=>{ hideDedi(localId); card.remove(); };
+      card.appendChild(x);
+      dediList.appendChild(card);
+    });
   }
 
-  document.getElementById('toggleList').onclick=()=>{
-    dediList.style.display = (dediList.style.display==="none")?"block":"none";
-    if(dediList.style.display==="block") loadDedis();
+  async function loadDedicatorias(){
+    const res = await fetchJsonp('dedis');
+    if(!(res&&res.ok)) return;
+    const items = res.dedis || [];
+    renderDedis(items);
+  }
+
+  dediForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const nombre = document.getElementById('dediNombre').value.trim();
+    const mensaje = document.getElementById('dediMsg').value.trim();
+    if(!nombre || !mensaje) return;
+    try{
+      await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({dedi:{nombre,mensaje}})});
+      document.getElementById('dediNombre').value='';
+      document.getElementById('dediMsg').value='';
+      showToast('💌 ¡Gracias por tu dedicatoria!');
+      await loadDedicatorias();
+      dediList.style.display='block';
+      document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'});
+    }catch(err){ alert('Error al guardar la dedicatoria: '+err.message); }
+  });
+
+  toggleListBtn.onclick = async ()=>{
+    await loadDedicatorias();
+    dediList.style.display = 'block';
+    document.getElementById('dedicatorias').scrollIntoView({behavior:'smooth'});
   };
 
-  document.getElementById('downloadDedis').onclick=()=>{
-    window.open(API_URL+"?action=dedis","_blank");
+  downloadBtn.onclick = async ()=>{
+    await loadDedicatorias();
+    const text = Array.from(dediList.children).map(c=>c.innerText).join('\n\n-------------------------\n\n');
+    const blob = new Blob([text], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'dedicatorias.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
   };
 
-  /* ===== Música ===== */
-  const musicBtn=document.getElementById('musicBtn');
-  const bgmusic=document.getElementById('bgmusic');
-  let playing=false;
-  musicBtn.onclick=()=>{
-    if(!playing){ bgmusic.play(); musicBtn.textContent="⏸️"; playing=true; }
-    else{ bgmusic.pause(); musicBtn.textContent="▶️"; playing=false; }
-  };
+  /* ===== Música (Drive) ===== */
+  const music = document.getElementById('bgMusic');
+  const musicBtn = document.getElementById('musicBtn');
+  const musicDot = document.getElementById('musicDot');
 
-  /* ===== Init ===== */
-  loadGallery();
-  </script>
+  function driveDirectAudioUrl(id){ return `https://drive.google.com/uc?export=download&id=${id}`; }
+  music.src = driveDirectAudioUrl(MUSIC_ID);
+
+  function setMusicState(playing){
+    musicBtn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+    musicDot.style.background = playing ? '#2feaa0' : '#ff7ab6';
+    musicDot.style.boxShadow = playing ? '0 0 6px #2feaa0' : '0 0 6px #ff7ab6';
+  }
+  async function tryPlay(){ try{ await music.play(); setMusicState(true);}catch(_){} }
+
+  musicBtn.onclick = async ()=>{
+    if(music.paused){ try{ await music.play(); setMusicState(true);}catch(e){} }
+    else { music.pause(); setMusicState(false); }
+  };
+  // Autoplay tras primer gesto del usuario
+  const enableOnce = ()=>{
+    tryPlay();
+    window.removeEventListener('scroll', enableOnce);
+    window.removeEventListener('click', enableOnce);
+    window.removeEventListener('touchstart', enableOnce);
+  };
+  window.addEventListener('scroll', enableOnce, {once:true});
+  window.addEventListener('click', enableOnce, {once:true});
+  window.addEventListener('touchstart', enableOnce, {once:true});
+
+  /* ===== Inicio ===== */
+  refreshGallery();
+  loadDedicatorias();
+
+  // Habilitar botón de subir cuando hay archivos
+  const observer=new MutationObserver(()=>{ btn.disabled = queue.length===0; });
+  observer.observe(previews,{childList:true,subtree:true});
+</script>
 </body>
 </html>
