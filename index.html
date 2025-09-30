@@ -147,6 +147,82 @@
     border:1px solid rgba(255,255,255,.18);
     box-shadow:0 0 10px rgba(209,154,125,.28);
     font-weight:600;
+    /* --- CONTRASTE HERO: subtítulo, fecha y botón --- */
+.hero-meta .hero-sub{
+  color:#e9eef8; 
+  text-shadow:0 2px 8px rgba(0,0,0,.45);
+}
+.hero-date{ 
+  margin-top:4px;
+}
+.date-pill{
+  display:inline-block; 
+  padding:4px 12px; 
+  border-radius:999px;
+  background:rgba(0,0,0,.35);          /* fondo oscuro suave */
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff; 
+  font-weight:700;
+  box-shadow:0 0 14px rgba(209,154,125,.25);
+}
+
+/* Botón del hero un poco más oscuro para que destaque */
+.hero-actions .hbtn{
+  background:rgba(0,0,0,.35);
+  border-color:rgba(255,255,255,.28);
+}
+
+/* Tarjeta de cada dedicatoria y botón de ocultar (X) */
+.dedi-card{
+  background:#0f131a;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:10px 12px;
+  position:relative;
+}
+.dedi-hide{
+  position:absolute; right:8px; top:8px;
+  width:26px; height:26px; display:grid; place-items:center;
+  border-radius:999px; cursor:pointer; line-height:0;
+  background:rgba(14,17,22,.6);
+  border:1px solid rgba(255,255,255,.2); color:#fff;
+}
+
+/* FAB música */
+#musicFab{
+  position:fixed; right:14px; bottom:14px; z-index:70;
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.16);
+  color:#fff; padding:10px 12px; border-radius:999px;
+  backdrop-filter:blur(6px);
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
+  font-weight:800; cursor:pointer;
+}
+#musicFab .dot{
+  width:8px; height:8px; border-radius:999px; background:#ff63c5; box-shadow:0 0 10px #ff63c5;
+}
+#musicFab.playing .dot{ background:#22c3a6; box-shadow:0 0 10px #22c3a6; }
+    /* === Botón flotante de música === */
+.music-fab{
+  position:fixed; right:16px; bottom:16px; z-index:120;
+  display:inline-flex; align-items:center; gap:8px;
+  background:radial-gradient(180px 80px at 80% 20%, rgba(255,255,255,.09), rgba(255,255,255,.06));
+  border:1px solid rgba(255,255,255,.14);
+  color:#fff; font-weight:800; padding:10px 14px; border-radius:999px;
+  box-shadow:0 16px 36px rgba(0,0,0,.35); cursor:pointer; user-select:none;
+  backdrop-filter:blur(6px);
+}
+.music-fab .dot{width:8px;height:8px;border-radius:50%;background:#ff5bd7;box-shadow:0 0 12px #ff5bd7}
+.music-fab.playing .dot{background:#22c3a6; box-shadow:0 0 12px #22c3a6}
+
+/* (opcional) pequeño tooltip de error */
+.music-toast{
+  position:fixed; left:50%; bottom:86px; transform:translateX(-50%);
+  background:rgba(20,24,31,.92); color:#e8f1ff; border:1px solid rgba(255,255,255,.12);
+  padding:8px 12px; border-radius:10px; font-size:13px; opacity:0; pointer-events:none; transition:.25s;
+}
+.music-toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -176,20 +252,18 @@
 
   <div class="app-frame">
     <!-- HERO -->
-    <section class="hero-card">
-      <img id="heroImg" class="hero-img" alt="Quinceañera">
-    <div class="hero-meta">
-  <div class="hero-title" id="heroName">.⋅˚₊‧ 🜲 ‧₊˚ ⋅CYTLALLI.⋅˚₊‧ 🜲 ‧₊˚ ⋅</div>
-
-  <div class="hero-sub">Compartimos un momento muy especial</div>
-<div class="hero-date"><span class="date-pill">4 de Octubre del 2025</span></div>
-
-  <div class="hero-actions">
-    <button class="hbtn" id="goRead">👀 Ver dedicatorias</button>
+   <section class="hero-card">
+  <img id="heroImg" class="hero-img" alt="Quinceañera">
+  <div class="hero-overlay"></div>
+  <div class="hero-meta">
+    <div class="hero-title" id="heroName">.⋅˚₊‧ 🜲 ‧₊˚ ⋅CYTLALLI.⋅˚₊‧ 🜲 ‧₊˚ ⋅</div>
+    <div class="hero-sub">Compartimos un momento muy especial</div>
+    <div class="hero-date"><span class="date-pill">4 de Octubre del 2025</span></div>
+    <div class="hero-actions">
+      <button class="hbtn" id="goRead">👀 Ver dedicatorias</button>
+    </div>
   </div>
-</div>
-    
-    </section>
+</section>
 
     <!-- Uploader -->
     <section class="uploader">
@@ -240,6 +314,7 @@
   <audio id="bgMusic" preload="none" loop></audio>
 
   <div class="toast" id="toast">✅ Recuerdo subido</div>
+  <button id="musicFab"><span class="dot"></span> Música</button>
 
 <script>
   /* ===== CONFIG ===== */
